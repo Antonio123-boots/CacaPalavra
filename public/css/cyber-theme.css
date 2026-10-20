@@ -1,0 +1,789 @@
+/* ==========================================================================
+   TERMO DUELO - ARENA CYBER DESIGN SYSTEM (CSS)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Syne:wght@700;800&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Paleta Arena Cyber */
+  --cyber-bg: #07090e;
+  --cyber-surface: rgba(15, 23, 42, 0.82);
+  --cyber-surface-elevated: rgba(22, 33, 62, 0.92);
+  --cyber-border: rgba(56, 189, 248, 0.22);
+  --cyber-border-glow: 0 0 16px rgba(56, 189, 248, 0.35);
+
+  --text-main: #f8fafc;
+  --text-sub: #94a3b8;
+  --text-dim: #64748b;
+
+  /* Cores de Feedback */
+  --cyber-correct: #00e599;
+  --cyber-correct-glow: 0 0 16px rgba(0, 229, 153, 0.5);
+  --cyber-present: #fbbf24;
+  --cyber-present-glow: 0 0 16px rgba(251, 191, 36, 0.45);
+  --cyber-absent: #1e293b;
+  --cyber-absent-border: #334155;
+
+  /* Luzes da Arena */
+  --accent-cyan: #38bdf8;
+  --accent-magenta: #ec4899;
+  --accent-gradient: linear-gradient(135deg, #38bdf8, #818cf8);
+
+  /* Tipografia */
+  --font-heading: 'Syne', sans-serif;
+  --font-mono: 'Space Grotesk', sans-serif;
+
+  /* Dimensões */
+  --tile-size: 58px;
+  --tile-gap: 8px;
+  --key-height: 52px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+}
+
+body {
+  background-color: var(--cyber-bg);
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.12) 0%, transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.08) 0%, transparent 50%);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+/* APP WRAPPER */
+.app-container {
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  position: relative;
+}
+
+/* TOP HEADER */
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cyber-border);
+}
+
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-badge {
+  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--cyber-border);
+  box-shadow: var(--cyber-border-glow);
+}
+
+.brand-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  font-size: 0.68rem;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--cyber-border);
+  color: var(--text-main);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--accent-cyan);
+}
+
+.nav-btn.active {
+  background: var(--cyber-correct);
+  color: #000;
+  border-color: transparent;
+}
+
+/* CLASSE GLOBAL HIDDEN */
+.hidden, [hidden] {
+  display: none !important;
+}
+
+/* TELAS (LOBBY / ARENA / AGUARDO) */
+.view-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.3s ease;
+}
+
+.view-screen.hidden {
+  display: none !important;
+}
+
+/* ==========================================================================
+   TELA DE LOBBY (CRIAR / ENTRAR / PARTIDA RÁPIDA)
+   ========================================================================== */
+.lobby-screen {
+  justify-content: center;
+  gap: 24px;
+  padding: 20px 0;
+}
+
+.hero-banner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hero-banner h2 {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff 30%, var(--accent-cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-banner p {
+  font-size: 0.88rem;
+  color: var(--text-sub);
+}
+
+.lobby-card {
+  background: var(--cyber-surface);
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cyber-input {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cyber-input:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
+/* SELETOR DE TEMAS */
+.themes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.theme-option {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-option.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+.theme-option-icon { font-size: 1.2rem; }
+.theme-option-name { font-size: 0.8rem; font-weight: 700; }
+
+/* BOTÕES DE AÇÃO DO LOBBY */
+.cyber-btn {
+  background: var(--accent-gradient);
+  border: none;
+  color: #fff;
+  padding: 14px 20px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.35);
+  transition: transform 0.1s ease, filter 0.2s ease;
+}
+
+.cyber-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.cyber-btn:active {
+  transform: translateY(1px);
+}
+
+.cyber-btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--cyber-border);
+  box-shadow: none;
+}
+
+.cyber-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.divider-text {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  position: relative;
+}
+
+.join-inline-form {
+  display: flex;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   TELA DE AGUARDO (SALA PRIVADA CRIADA)
+   ========================================================================== */
+.waiting-screen {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+}
+
+.room-code-box {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px dashed var(--accent-cyan);
+  padding: 16px 32px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--cyber-border-glow);
+}
+
+.room-code-val {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  letter-spacing: 0.2em;
+  color: var(--accent-cyan);
+}
+
+/* ==========================================================================
+   CONTAGEM REGRESSIVA OVERLAY (3, 2, 1)
+   ========================================================================== */
+.countdown-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 9, 14, 0.92);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  gap: 16px;
+}
+
+.countdown-overlay.hidden {
+  display: none !important;
+}
+
+.countdown-number {
+  font-family: var(--font-heading);
+  font-size: 6rem;
+  font-weight: 900;
+  color: var(--cyber-correct);
+  text-shadow: 0 0 30px rgba(0, 229, 153, 0.8);
+  animation: pulse-countdown 1s infinite;
+}
+
+@keyframes pulse-countdown {
+  0% { transform: scale(0.6); opacity: 0.4; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ==========================================================================
+   ARENA DE DUELO 1v1 (TELA DE PARTIDA)
+   ========================================================================== */
+.arena-screen {
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.duel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.duel-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+}
+
+.category-tag {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--cyber-border);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.round-clock {
+  font-family: var(--font-heading);
+  color: var(--text-sub);
+  font-weight: 700;
+}
+
+/* BARRA DE DUELISTA VS */
+.duel-vs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--cyber-surface);
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.player-info.opponent {
+  flex-direction: row-reverse;
+}
+
+.avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  border: 2px solid var(--cyber-correct);
+  position: relative;
+}
+
+.avatar-circle.opp-circ {
+  border-color: var(--accent-magenta);
+}
+
+.typing-pulse {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-magenta);
+  display: none;
+}
+
+.typing-pulse.active {
+  display: block;
+  animation: typing-anim 0.8s infinite alternate;
+}
+
+@keyframes typing-anim {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(1.4); opacity: 1; }
+}
+
+.player-names {
+  display: flex;
+  flex-direction: column;
+}
+
+.p-nick {
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.p-state {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+}
+
+.vs-block {
+  text-align: center;
+}
+
+.vs-tag {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--accent-magenta);
+}
+
+/* MINI-GRID DO OPONENTE REALTIME ANTI-SPOILER */
+.opponent-mini-tracker {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tracker-title-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--text-sub);
+}
+
+.mini-grid-container {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+}
+
+.mini-row {
+  display: flex;
+  gap: 2px;
+}
+
+.mini-cell {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.mini-cell.correct { background: var(--cyber-correct); }
+.mini-cell.present { background: var(--cyber-present); }
+.mini-cell.absent { background: rgba(255, 255, 255, 0.28); }
+
+/* TABULEIRO DO JOGADOR LOCAL */
+.board-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  gap: var(--tile-gap);
+}
+
+.board-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--tile-gap);
+}
+
+.board-tile {
+  width: var(--tile-size);
+  height: var(--tile-size);
+  border: 2px solid var(--cyber-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 1.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-main);
+  position: relative;
+  transition: transform 0.1s ease, border-color 0.15s ease, background 0.25s ease;
+}
+
+.board-tile.filled {
+  border-color: var(--accent-cyan);
+  animation: pop-letter 0.1s ease-in-out;
+}
+
+@keyframes pop-letter {
+  0% { transform: scale(0.85); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.board-tile.flip {
+  animation: flip-3d 0.38s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+}
+
+@keyframes flip-3d {
+  0% { transform: rotateX(0deg); }
+  50% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+.board-tile.correct {
+  background-color: var(--cyber-correct);
+  border-color: var(--cyber-correct);
+  color: #000;
+  box-shadow: var(--cyber-correct-glow);
+}
+
+.board-tile.present {
+  background-color: var(--cyber-present);
+  border-color: var(--cyber-present);
+  color: #000;
+  box-shadow: var(--cyber-present-glow);
+}
+
+.board-tile.absent {
+  background-color: var(--cyber-absent);
+  border-color: var(--cyber-absent-border);
+  color: var(--text-dim);
+}
+
+/* ÍCONES DALTÔNICOS */
+.cb-symbol {
+  display: none;
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+body.colorblind-mode .cb-symbol {
+  display: block;
+}
+
+/* TECLADO VIRTUAL */
+.keyboard-section {
+  width: 100%;
+  margin-top: auto;
+}
+
+.cyber-keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  touch-action: manipulation;
+}
+
+.k-row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.k-key {
+  background-color: var(--cyber-absent);
+  color: var(--text-main);
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--radius-sm);
+  height: var(--key-height);
+  min-width: 28px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.05s ease, background-color 0.2s ease;
+}
+
+.k-key:active {
+  transform: scale(0.92);
+}
+
+.k-key.action-key {
+  flex: 1.5;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.k-key.correct {
+  background-color: var(--cyber-correct);
+  border-color: var(--cyber-correct);
+  color: #000;
+}
+
+.k-key.present {
+  background-color: var(--cyber-present);
+  border-color: var(--cyber-present);
+  color: #000;
+}
+
+.k-key.absent {
+  background-color: #0f172a;
+  opacity: 0.4;
+}
+
+/* ==========================================================================
+   MODAL DE FIM DE PARTIDA (VITÓRIA / DERROTA)
+   ========================================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 9, 14, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal-backdrop.hidden {
+  display: none !important;
+}
+
+.game-over-modal {
+  background: var(--cyber-surface-elevated);
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--radius-md);
+  padding: 28px 24px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  animation: modal-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modal-pop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.result-icon { font-size: 3.5rem; }
+.result-title { font-family: var(--font-heading); font-size: 1.8rem; font-weight: 800; }
+.result-title.win { color: var(--cyber-correct); }
+.result-title.lose { color: var(--accent-magenta); }
+
+.secret-word-reveal {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+
+.secret-word-val {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  color: var(--accent-cyan);
+  letter-spacing: 0.15em;
+  margin-top: 4px;
+}
+
+.toast-msg {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cyber-surface-elevated);
+  border: 1px solid var(--cyber-border);
+  color: var(--text-main);
+  padding: 10px 18px;
+  border-radius: 30px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.toast-msg.show {
+  opacity: 1;
+}
+
+/* RESPONSIVIDADE */
+@media (max-width: 420px) {
+  :root {
+    --tile-size: 48px;
+    --tile-gap: 5px;
+    --key-height: 48px;
+  }
+}

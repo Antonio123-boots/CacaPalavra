@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Termo Duelo - Painel de Especialistas & Protótipos de Interface</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Fontes curadas para os 3 estilos visuais -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-cyber">
+  <!-- BARRA DE CONTROLE DO PAINEL DE ESPECIALISTAS (TOP BAR) -->
+  <header class="expert-toolbar" id="expertToolbar">
+    <div class="toolbar-brand">
+      <div class="brand-icon">⚔️</div>
+      <div class="brand-info">
+        <h1>Termo Duelo</h1>
+        <span class="badge-tag">Design Showcase 1v1 PWA</span>
+      </div>
+    </div>
+
+    <!-- SELETOR DE PROTÓTIPOS -->
+    <div class="prototype-selector" role="radiogroup" aria-label="Selecione o protótipo de design">
+      <button class="proto-btn active" id="btnProtoCyber" data-theme="theme-cyber" aria-checked="true" role="radio">
+        <span class="proto-num">01</span>
+        <span class="proto-name">Arena Cyber Duel</span>
+        <span class="proto-sub">Esports / Neon Glass</span>
+      </button>
+      <button class="proto-btn" id="btnProtoZen" data-theme="theme-zen" aria-checked="false" role="radio">
+        <span class="proto-num">02</span>
+        <span class="proto-name">Zen Minimalista</span>
+        <span class="proto-sub">Sleek Dark / Suíço</span>
+      </button>
+      <button class="proto-btn" id="btnProtoPop" data-theme="theme-pop" aria-checked="false" role="radio">
+        <span class="proto-num">03</span>
+        <span class="proto-name">Pop Arcade Social</span>
+        <span class="proto-sub">Vibrante / Lúdico 3D</span>
+      </button>
+    </div>
+
+    <!-- CONTROLES RÁPIDOS DE ACESSIBILIDADE E VIEWPORT -->
+    <div class="toolbar-actions">
+      <button class="tool-btn" id="btnToggleColorblind" title="Alternar Modo Daltônico (Símbolos Geométricos)" aria-pressed="false">
+        <span class="tool-icon">👁️</span>
+        <span class="tool-label">Modo Daltônico</span>
+      </button>
+      <button class="tool-btn" id="btnToggleView" title="Alternar Modo Celular / Desktop" aria-pressed="false">
+        <span class="tool-icon">📱</span>
+        <span class="tool-label" id="viewLabel">Visualização Mobile</span>
+      </button>
+      <button class="tool-btn highlight" id="btnOpenExpertModal" title="Ver Análise dos 3 Especialistas">
+        <span class="tool-icon">👥</span>
+        <span class="tool-label">Notas dos Especialistas</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTAINER PRINCIPAL DO AMBIENTE -->
+  <main class="showcase-container">
+    
+    <!-- WRAPPER COM OPÇÃO DE MOLDURA DE SMARTPHONE OU TELA CHEIA -->
+    <div class="device-viewport" id="deviceViewport">
+      <div class="device-notch"></div>
+      
+      <!-- APLICAÇÃO DO JOGO (ÁREA DE MOCKUP INTERATIVO) -->
+      <div class="game-app-screen" id="gameAppScreen">
+        
+        <!-- HEADER DA PARTIDA 1v1 -->
+        <header class="game-header">
+          <div class="game-meta">
+            <span class="category-pill" id="gameCategory">🎬 Cinema & Séries</span>
+            <span class="round-timer" id="gameTimer">⏱️ 01:24</span>
+          </div>
+
+          <div class="duel-status-bar">
+            <!-- VOCÊ -->
+            <div class="player-card you">
+              <div class="player-avatar">
+                <span>😎</span>
+                <span class="pulse-indicator live"></span>
+              </div>
+              <div class="player-details">
+                <span class="player-tag">Você</span>
+                <span class="player-score" id="youScore">Linha 1/6</span>
+              </div>
+            </div>
+
+            <!-- PLACAR CENTRAL VS -->
+            <div class="versus-badge">
+              <span class="vs-text">VS</span>
+              <span class="race-tag">CORRIDA</span>
+            </div>
+
+            <!-- OPONENTE -->
+            <div class="player-card opponent">
+              <div class="player-details text-right">
+                <span class="player-tag">Oponente</span>
+                <span class="player-score" id="oppScore">Digitando...</span>
+              </div>
+              <div class="player-avatar opp-avatar">
+                <span>🤖</span>
+                <span class="pulse-indicator typing"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- MINI-GRID DO OPONENTE (ANTI-SPOILER REALTIME) -->
+          <div class="opponent-tracker" id="oppTracker">
+            <div class="tracker-header">
+              <span class="tracker-title">Progresso do Oponente (Tempo Real)</span>
+              <span class="tracker-hint">Sem revelar letras</span>
+            </div>
+            <div class="opponent-mini-grid" id="oppMiniGrid" aria-label="Mini-tabuleiro do oponente">
+              <!-- Gerado via JS: 6 linhas de 5 mini-blocos -->
+            </div>
+          </div>
+        </header>
+
+        <!-- SEPARADOR DINÂMICO DE TENSÃO -->
+        <div class="tension-divider">
+          <div class="tension-bar" id="tensionBar"></div>
+        </div>
+
+        <!-- TABULEIRO PRINCIPAL DO JOGADOR (6 LINHAS X 5 LETRAS) -->
+        <section class="board-container" aria-label="Seu tabuleiro de tentativas">
+          <div class="game-board" id="playerBoard">
+            <!-- Linhas 1 a 6 geradas dinamicamente -->
+          </div>
+        </section>
+
+        <!-- MENSAGEM / FEEDBACK TOAST -->
+        <div class="feedback-toast" id="feedbackToast" role="status" aria-live="polite">
+          Dica do Tema: Personagem icônico de ficção científica
+        </div>
+
+        <!-- TECLADO VIRTUAL QWERTY PT-BR -->
+        <section class="keyboard-container" aria-label="Teclado Virtual">
+          <div class="keyboard" id="keyboard">
+            <!-- Fileiras geradas dinamicamente via JS -->
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- PAINEL LATERAL INFORMATIVO (DOS 3 AGENTES) -->
+    <aside class="expert-sidebar" id="expertSidebar">
+      <div class="sidebar-header">
+        <h2>Parecer dos Especialistas</h2>
+        <span class="badge-role">Coordenação Tripartite</span>
+      </div>
+
+      <!-- AGENTE UX -->
+      <div class="agent-card ux-agent">
+        <div class="agent-profile">
+          <div class="agent-avatar">📐</div>
+          <div>
+            <h3>Dra. Clara Silveira</h3>
+            <span class="agent-specialty">Especialista em UX Design</span>
+          </div>
+        </div>
+        <p class="agent-verdict" id="uxVerdict">
+          <em>"A ergonomia da 'Corrida Pura' exige que o jogador não desvie a visão periférica por mais de 200ms. O mini-grid do oponente no topo reduz a sobrecarga de atenção e maximiza a tensão competitiva sem poluir o foco na digitação."</em>
+        </p>
+        <ul class="agent-highlights" id="uxHighlights">
+          <li>Thumb-Zone: teclado a 45% da altura inferior em celulares.</li>
+          <li>Feedback do oponente com blocos cegos para evitar spoilers cognitivos.</li>
+        </ul>
+      </div>
+
+      <!-- AGENTE ACESSIBILIDADE -->
+      <div class="agent-card a11y-agent">
+        <div class="agent-profile">
+          <div class="agent-avatar">♿</div>
+          <div>
+            <h3>Marcos Prado</h3>
+            <span class="agent-specialty">Especialista em Acessibilidade (a11y)</span>
+          </div>
+        </div>
+        <p class="agent-verdict" id="a11yVerdict">
+          <em>"Não podemos depender exclusivamente de Verde e Amarelo! O Modo Daltônico adiciona ícones geométricos distintivos (Círculo para Verde, Triângulo para Amarelo, Cruz para Cinza) com suporte pleno a leitores de tela e contraste 7:1 (WCAG AAA)."</em>
+        </p>
+        <ul class="agent-highlights" id="a11yHighlights">
+          <li>Alvos de toque do teclado com altura mínima de 52px.</li>
+          <li>Atributos ARIA dinâmicos anunciam acertos de cada letra.</li>
+        </ul>
+      </div>
+
+      <!-- AGENTE VISUAL -->
+      <div class="agent-card visual-agent">
+        <div class="agent-profile">
+          <div class="agent-avatar">🎨</div>
+          <div>
+            <h3>Helena Rossi</h3>
+            <span class="agent-specialty">Especialista em Visual Design</span>
+          </div>
+        </div>
+        <p class="agent-verdict" id="visualVerdict">
+          <em>"Criamos 3 universos estéticos: 1. Arena Cyber (dark glassmorphism esportivo com bordas luminosas); 2. Zen Minimalista (elegância suíça monocromática com micro-sombras); 3. Pop Arcade (lúdico, tátil com chanfros 3D e cores ricas)."</em>
+        </p>
+        <ul class="agent-highlights" id="visualHighlights">
+          <li>Micro-animações 3D flip card de 350ms com aceleração cubic-bezier.</li>
+          <li>Efeitos sonoros sintetizados nativos (Web Audio API) a cada tecla.</li>
+        </ul>
+      </div>
+
+      <!-- AÇÕES DE TESTE INTERATIVO -->
+      <div class="interactive-controls-box">
+        <h4>Simulador de Duelo</h4>
+        <div class="sim-buttons">
+          <button class="sim-btn" id="btnSimOpponentGuess">Simular Jogada do Oponente</button>
+          <button class="sim-btn" id="btnResetBoard">Reiniciar Tabuleiro</button>
+        </div>
+        <p class="sim-tip">Você também pode digitar no seu teclado físico ou clicar no teclado na tela!</p>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- MODAL DETALHADO DOS ESPECIALISTAS -->
+  <div class="modal-overlay" id="expertModal" hidden>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2>Painel Completo de Decisões dos 3 Especialistas</h2>
+        <button class="modal-close-btn" id="btnCloseExpertModal" aria-label="Fechar modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="proto-comparison-grid">
+          <div class="proto-col">
+            <span class="proto-tag">Protótipo 01</span>
+            <h3>Arena Cyber Duel</h3>
+            <p><strong>Foco:</strong> Tensão e atmosfera competitiva de e-sports.</p>
+            <ul>
+              <li>Paleta: Preto espacial, ciano neon, esmeralda cyber e âmbar elétrico.</li>
+              <li>Bordas com brilho difuso (*glow*) e efeitos de pulso de sinal.</li>
+              <li>Mini-tabuleiro em destaque dinâmico superior com efeito de radar.</li>
+            </ul>
+          </div>
+          <div class="proto-col">
+            <span class="proto-tag">Protótipo 02</span>
+            <h3>Zen Minimalista</h3>
+            <p><strong>Foco:</strong> Pureza visual, concentração máxima e sofisticação.</p>
+            <ul>
+              <li>Paleta: Cinzas profundos de grafite, verde sálvia e ocre suave.</li>
+              <li>Tipografia geométrica limpa (Plus Jakarta Sans) sem luzes ou distrações.</li>
+              <li>Mini-tabuleiro integrado sutilmente como linha de status minimalista.</li>
+            </ul>
+          </div>
+          <div class="proto-col">
+            <span class="proto-tag">Protótipo 03</span>
+            <h3>Pop Arcade Social</h3>
+            <p><strong>Foco:</strong> Diversão casual, apelo amplo e botões 3D altamente táteis.</p>
+            <ul>
+              <li>Paleta: Roxo uva, verde lima vibrante, laranja mandarim e cantos arredondados (16px+).</li>
+              <li>Botões com relevo táctil (estilo Duolingo/Brawl Stars) que afundam ao toque.</li>
+              <li>Emotes e reações rápidas integradas para zoar ou comemorar com o amigo.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "category": "esportes",
+  "name": "Futebol & Esportes",
+  "icon": "⚽",
+  "words": [
+    "FALTA", "GOLOS", "TRAVE", "CAMPO", "CHUTE",
+    "DRIBL", "PASSE", "ZAGRA", "APITO", "CRAVO",
+    "TIMES", "CLUBE", "PONTO", "REVES", "TREINO",
+    "RONAL", "MESSI", "NEYMA", "ZIZOU", "PELEN",
+    "PELEZ", "CORIN", "PALME", "VASCO", "FLAMA",
+    "GREMI", "BAHIA", "SPORT", "VOLEI", "TENIS",
+    "BOXES", "RUGBI", "JUDOC", "SURFE", "SKATE",
+    "NADAR", "CORRE", "PISTA", "CORDA", "REDES"
+  ]
+}

@@ -1,0 +1,1046 @@
+/* ==========================================================================
+   TERMO DUELO - PAINEL DE ESPECIALISTAS & PROTÓTIPOS
+   SISTEMA DE DESIGN VANILLA CSS
+   ========================================================================== */
+
+/* RESET E BASE */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Transições globais */
+  --transition-fast: 0.15s ease;
+  --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  /* Dimensões padrão */
+  --tile-size: 58px;
+  --tile-gap: 8px;
+  --key-height: 54px;
+}
+
+/* ==========================================================================
+   TEMA 1: ARENA CYBER DUEL (ESPORTS / NEON GLASS)
+   ========================================================================== */
+body.theme-cyber {
+  --bg-main: #07090e;
+  --bg-surface: rgba(15, 23, 42, 0.75);
+  --bg-surface-elevated: rgba(22, 33, 62, 0.85);
+  --border-color: rgba(56, 189, 248, 0.2);
+  --border-glow: 0 0 15px rgba(56, 189, 248, 0.25);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  /* Cores de feedback Wordle */
+  --color-correct: #00e599;
+  --color-present: #fbbf24;
+  --color-absent: #1e293b;
+  --color-absent-border: #334155;
+  --color-key-bg: #1e293b;
+  --color-key-text: #f1f5f9;
+  
+  /* Cores de destaque da arena */
+  --accent-cyan: #38bdf8;
+  --accent-magenta: #ec4899;
+  --accent-gradient: linear-gradient(135deg, #38bdf8, #818cf8);
+  --accent-glow: 0 0 25px rgba(56, 189, 248, 0.4);
+
+  --font-heading: 'Syne', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-game: 'Space Grotesk', sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 18px;
+  --box-shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* ==========================================================================
+   TEMA 2: ZEN MINIMALISTA (SLEEK DARK / SUÍÇO)
+   ========================================================================== */
+body.theme-zen {
+  --bg-main: #0c0d0e;
+  --bg-surface: #141619;
+  --bg-surface-elevated: #1b1e22;
+  --border-color: #272b30;
+  --border-glow: none;
+  --text-primary: #f2f3f5;
+  --text-secondary: #9da3ae;
+  --text-muted: #5e6573;
+  
+  /* Cores de feedback - Sálvia e Ocre sofisticado */
+  --color-correct: #2ea068;
+  --color-present: #c98b27;
+  --color-absent: #212429;
+  --color-absent-border: #2e333a;
+  --color-key-bg: #1d2024;
+  --color-key-text: #e1e4ea;
+  
+  --accent-cyan: #9da3ae;
+  --accent-magenta: #e1e4ea;
+  --accent-gradient: linear-gradient(135deg, #272b30, #363c44);
+  --accent-glow: none;
+
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-game: 'Plus Jakarta Sans', sans-serif;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --box-shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================================================
+   TEMA 3: POP ARCADE SOCIAL (VIBRANTE / LÚDICO 3D)
+   ========================================================================== */
+body.theme-pop {
+  --bg-main: #19102c;
+  --bg-surface: #261b42;
+  --bg-surface-elevated: #332457;
+  --border-color: #4b3580;
+  --border-glow: 0 4px 0 #120b22;
+  --text-primary: #ffffff;
+  --text-secondary: #d1c4e9;
+  --text-muted: #9575cd;
+  
+  /* Cores vibrantes com relevo 3D */
+  --color-correct: #58cc02;
+  --color-present: #ff9600;
+  --color-absent: #3d2b68;
+  --color-absent-border: #523a8b;
+  --color-key-bg: #38275f;
+  --color-key-text: #ffffff;
+  
+  --accent-cyan: #00cd9c;
+  --accent-magenta: #ff4b4b;
+  --accent-gradient: linear-gradient(135deg, #ff4b4b, #ff9600);
+  --accent-glow: 0 8px 0 rgba(0, 0, 0, 0.25);
+
+  --font-heading: 'Fredoka', cursive;
+  --font-body: 'Fredoka', cursive;
+  --font-game: 'Fredoka', cursive;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+  --box-shadow-card: 0 8px 0 #120b22, 0 14px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* ==========================================================================
+   ESTRUTURA GERAL DA PÁGINA
+   ========================================================================== */
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  transition: background-color var(--transition-smooth), color var(--transition-smooth);
+}
+
+/* ==========================================================================
+   TOOLBAR SUPERIOR DO PAINEL DE ESPECIALISTAS
+   ========================================================================== */
+.expert-toolbar {
+  background: var(--bg-surface-elevated);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(12px);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  z-index: 100;
+  position: sticky;
+  top: 0;
+}
+
+.toolbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  font-size: 1.8rem;
+  background: rgba(255, 255, 255, 0.08);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-info h1 {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.badge-tag {
+  font-size: 0.72rem;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* SELETOR DE PROTÓTIPOS */
+.prototype-selector {
+  display: flex;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 4px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  gap: 6px;
+}
+
+.proto-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+
+.proto-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.proto-btn.active {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-cyber .proto-btn.active {
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+}
+
+body.theme-pop .proto-btn.active {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 #120b22;
+}
+
+.proto-num {
+  font-size: 0.68rem;
+  font-weight: 800;
+  opacity: 0.7;
+}
+
+.proto-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.proto-sub {
+  font-size: 0.7rem;
+  opacity: 0.65;
+}
+
+/* AÇÕES DA TOOLBAR */
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+}
+
+.tool-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.tool-btn.active {
+  background: var(--color-correct);
+  color: #000;
+  border-color: transparent;
+  font-weight: 800;
+}
+
+.tool-btn.highlight {
+  background: var(--accent-gradient);
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================================================
+   LAYOUT PRINCIPAL (SHOWCASE CONTAINER)
+   ========================================================================== */
+.showcase-container {
+  display: flex;
+  flex: 1;
+  padding: 24px;
+  gap: 28px;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ==========================================================================
+   VIEWPORT DO DISPOSITIVO (SMARTPHONE OU FULL)
+   ========================================================================== */
+.device-viewport {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 40px;
+  box-shadow: var(--box-shadow-card);
+  width: 440px;
+  max-width: 100%;
+  padding: 18px 14px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-smooth);
+}
+
+/* Modo Desktop expandido */
+.device-viewport.desktop-view {
+  width: 720px;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.device-viewport.desktop-view .device-notch {
+  display: none;
+}
+
+.device-notch {
+  width: 110px;
+  height: 20px;
+  background: #000;
+  border-radius: 12px;
+  margin: 0 auto 12px auto;
+  opacity: 0.8;
+}
+
+/* TELA DO JOGO */
+.game-app-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+}
+
+/* ==========================================================================
+   CABEÇALHO DO DUELO & PLACAR 1v1
+   ========================================================================== */
+.game-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.game-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.category-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.round-timer {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* BARRA DE DUELO VS */
+.duel-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  gap: 8px;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.player-card.opponent {
+  justify-content: flex-end;
+}
+
+.player-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  position: relative;
+  border: 2px solid var(--color-correct);
+}
+
+.opp-avatar {
+  border-color: var(--accent-magenta);
+}
+
+.pulse-indicator {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-correct);
+  border: 2px solid var(--bg-surface);
+}
+
+.pulse-indicator.typing {
+  background: var(--accent-magenta);
+  animation: pulse-ring 1s infinite alternate;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(1.3); opacity: 1; }
+}
+
+.player-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-tag {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.player-score {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.versus-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 6px;
+}
+
+.vs-text {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--accent-magenta);
+}
+
+.race-tag {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--accent-cyan);
+}
+
+/* ==========================================================================
+   MINI-GRID DO OPONENTE (ANTI-SPOILER REALTIME)
+   ========================================================================== */
+.opponent-tracker {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tracker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+.tracker-hint {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.opponent-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.mini-row {
+  display: flex;
+  gap: 2px;
+}
+
+.mini-tile {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.mini-tile.correct { background: var(--color-correct); }
+.mini-tile.present { background: var(--color-present); }
+.mini-tile.absent { background: rgba(255, 255, 255, 0.25); }
+
+/* SEPARADOR DE TENSÃO */
+.tension-divider {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.tension-bar {
+  height: 100%;
+  width: 50%;
+  background: var(--accent-gradient);
+  transition: width 0.5s ease;
+}
+
+/* ==========================================================================
+   TABULEIRO DO JOGADOR (6 LINHAS X 5 LETRAS)
+   ========================================================================== */
+.board-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.game-board {
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  gap: var(--tile-gap);
+}
+
+.board-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--tile-gap);
+}
+
+.tile {
+  width: var(--tile-size);
+  height: var(--tile-size);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-game);
+  font-size: 1.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  user-select: none;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
+  position: relative;
+  transition: transform 0.1s ease, border-color 0.15s ease, background 0.3s ease;
+}
+
+/* Estado de letra preenchida */
+.tile.filled {
+  border-color: var(--text-secondary);
+  animation: pop-in 0.12s ease-in-out;
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.85); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Efeito 3D Flip */
+.tile.flip {
+  animation: flip-tile 0.4s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+}
+
+@keyframes flip-tile {
+  0% { transform: rotateX(0deg); }
+  50% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+/* Estados de feedback de cores */
+.tile.correct {
+  background-color: var(--color-correct);
+  border-color: var(--color-correct);
+  color: #000;
+}
+
+.tile.present {
+  background-color: var(--color-present);
+  border-color: var(--color-present);
+  color: #000;
+}
+
+.tile.absent {
+  background-color: var(--color-absent);
+  border-color: var(--color-absent-border);
+  color: var(--text-muted);
+}
+
+/* TEMA POP: BOTÕES COM ESTILO 3D CHUNKY */
+body.theme-pop .tile {
+  border-width: 3px;
+  border-bottom-width: 5px;
+}
+
+body.theme-pop .tile.correct {
+  color: #fff;
+  border-color: #3b8702;
+}
+
+body.theme-pop .tile.present {
+  color: #fff;
+  border-color: #b86b00;
+}
+
+/* MODO DALTÔNICO COM SÍMBOLOS GEOMÉTRICOS */
+.colorblind-icon {
+  display: none;
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+body.colorblind-mode .colorblind-icon {
+  display: block;
+}
+
+/* ==========================================================================
+   FEEDBACK TOAST
+   ========================================================================== */
+.feedback-toast {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  margin: 0 auto;
+  max-width: 90%;
+  opacity: 0.9;
+}
+
+/* ==========================================================================
+   TECLADO VIRTUAL QWERTY
+   ========================================================================== */
+.keyboard-container {
+  margin-top: auto;
+  width: 100%;
+}
+
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  touch-action: manipulation;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+
+.key-btn {
+  background-color: var(--color-key-bg);
+  color: var(--color-key-text);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  height: var(--key-height);
+  min-width: 30px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-game);
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.05s ease, background-color 0.2s ease;
+  position: relative;
+}
+
+.key-btn:active {
+  transform: scale(0.94);
+}
+
+.key-btn.action-key {
+  flex: 1.5;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+/* Feedback no teclado */
+.key-btn.correct {
+  background-color: var(--color-correct);
+  border-color: var(--color-correct);
+  color: #000;
+}
+
+.key-btn.present {
+  background-color: var(--color-present);
+  border-color: var(--color-present);
+  color: #000;
+}
+
+.key-btn.absent {
+  background-color: var(--color-absent);
+  opacity: 0.45;
+}
+
+/* POP ARCADE 3D KEYS */
+body.theme-pop .key-btn {
+  border-bottom: 4px solid rgba(0, 0, 0, 0.4);
+}
+
+body.theme-pop .key-btn:active {
+  border-bottom-width: 1px;
+  transform: translateY(3px);
+}
+
+/* ==========================================================================
+   SIDEBAR DOS ESPECIALISTAS (PARECERES TÉCNICOS)
+   ========================================================================== */
+.expert-sidebar {
+  flex: 1;
+  max-width: 440px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--box-shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+}
+
+.sidebar-header h2 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.badge-role {
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 3px 8px;
+  border-radius: 12px;
+  color: var(--accent-cyan);
+  font-weight: 700;
+}
+
+.agent-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.agent-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.agent-avatar {
+  font-size: 1.4rem;
+  background: rgba(255, 255, 255, 0.08);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agent-profile h3 {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.agent-specialty {
+  font-size: 0.72rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.agent-verdict {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.agent-highlights {
+  list-style: none;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 6px;
+}
+
+.agent-highlights li::before {
+  content: "▹ ";
+  color: var(--accent-cyan);
+}
+
+/* CAIXA DE CONTROLE DE SIMULAÇÃO */
+.interactive-controls-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.interactive-controls-box h4 {
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sim-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.sim-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+}
+
+.sim-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.sim-tip {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   MODAL DE COMPARAÇÃO DOS PROTÓTIPOS
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal-dialog {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  max-width: 860px;
+  width: 100%;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.modal-close-btn:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.proto-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.proto-col {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.proto-tag {
+  font-size: 0.68rem;
+  color: var(--accent-cyan);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.proto-col h3 {
+  font-size: 1rem;
+  font-family: var(--font-heading);
+}
+
+.proto-col p {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.proto-col ul {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  padding-left: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ==========================================================================
+   RESPONSIVIDADE GERAL
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .showcase-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .expert-sidebar {
+    width: 100%;
+    max-width: 440px;
+  }
+  
+  .proto-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .expert-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+  }
+
+  .prototype-selector {
+    overflow-x: auto;
+  }
+
+  .toolbar-actions {
+    justify-content: space-between;
+  }
+  
+  :root {
+    --tile-size: 48px;
+    --tile-gap: 5px;
+    --key-height: 48px;
+  }
+}

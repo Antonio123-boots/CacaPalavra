@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Termo Duelo — Corrida 1v1 PWA</title>
+  
+  <meta name="description" content="Jogo casual de adivinhação de palavras multiplayer em tempo real. Desafie seus amigos na Arena Cyber!">
+  <meta name="theme-color" content="#07090e">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2307090e'/><text x='50' y='65' font-size='50' text-anchor='middle'>⚔️</text></svg>">
+
+  <link rel="stylesheet" href="/css/cyber-theme.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- BARRA DE NAVEGAÇÃO SUPERIOR -->
+    <header class="top-nav">
+      <div class="brand-wrapper">
+        <div class="brand-badge">⚔️</div>
+        <div>
+          <h1 class="brand-title">Termo Duelo</h1>
+          <span class="brand-sub">Arena Cyber 1v1</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button class="nav-btn" id="btnToggleSound" title="Ligar/Desligar Áudio" aria-label="Alternar som">🔊</button>
+        <button class="nav-btn" id="btnToggleColorblind" title="Modo Daltônico" aria-label="Modo daltônico">👁️</button>
+        <button class="nav-btn" id="btnInstallPwa" title="Instalar Aplicativo" style="display: none;" aria-label="Instalar app">📥</button>
+      </div>
+    </header>
+
+    <!-- TELA 1: LOBBY (ENTRADA / CRIAR SALA) -->
+    <main class="view-screen lobby-screen" id="screenLobby">
+      <div class="hero-banner">
+        <h2>Corrida de Palavras 1v1</h2>
+        <p>Adivinhe a palavra secreta antes do seu adversário em tempo real.</p>
+      </div>
+
+      <div class="lobby-card">
+        <div class="input-group">
+          <label class="input-label" for="inputNickname">Seu Apelido</label>
+          <input type="text" id="inputNickname" class="cyber-input" placeholder="Ex: Duelista" maxlength="12" value="Duelista">
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Tema da Partida</label>
+          <div class="themes-grid" id="themesGrid">
+            <div class="theme-option active" data-theme="geral">
+              <span class="theme-option-icon">🧠</span>
+              <span class="theme-option-name">Geral (Clássico)</span>
+            </div>
+            <div class="theme-option" data-theme="cinema">
+              <span class="theme-option-icon">🎬</span>
+              <span class="theme-option-name">Cinema & Séries</span>
+            </div>
+            <div class="theme-option" data-theme="esportes">
+              <span class="theme-option-icon">⚽</span>
+              <span class="theme-option-name">Futebol & Esportes</span>
+            </div>
+            <div class="theme-option" data-theme="games">
+              <span class="theme-option-icon">🎮</span>
+              <span class="theme-option-name">Cultura Pop & Games</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="cyber-btn" id="btnCreateRoom">
+          <span>Criar Sala Privada</span>
+          <span>⚡</span>
+        </button>
+
+        <button class="cyber-btn secondary" id="btnQuickMatch">
+          <span>Partida Rápida (Aleatório)</span>
+          <span>🎲</span>
+        </button>
+
+        <div class="divider-text">ou entrar com código</div>
+
+        <div class="join-inline-form">
+          <input type="text" id="inputRoomCode" class="cyber-input" placeholder="Código (ex: ABC123)" maxlength="6" style="text-transform: uppercase;">
+          <button class="cyber-btn secondary" id="btnJoinRoom">Entrar</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- TELA 2: LOBBY DA SALA (ESPERANDO E CONFIRMAÇÃO DE PRONTIDÃO) -->
+    <section class="view-screen waiting-screen hidden" id="screenWaiting">
+      <div class="hero-banner">
+        <h2>Lobby do Duelo</h2>
+        <p id="waitingSubTitle">Compartilhe o código ou o link com seu adversário:</p>
+      </div>
+
+      <div class="room-code-box">
+        <span class="input-label">Código da Sala</span>
+        <div class="room-code-val" id="displayRoomCode">------</div>
+      </div>
+
+      <!-- CARDS DOS DOIS DUELISTAS NA SALA -->
+      <div class="lobby-duelists-grid" id="lobbyDuelistsGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 400px;">
+        <div class="duel-player-card" id="cardPlayer1" style="background: var(--cyber-surface); border: 1px solid var(--cyber-border); border-radius: var(--radius-sm); padding: 12px 8px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+          <div class="avatar-circle" style="width: 40px; height: 40px; font-size: 1.3rem;">😎</div>
+          <span class="p-nick" id="lobbyNick1" style="font-size: 0.85rem;">Jogador 1</span>
+          <span class="badge-status" id="lobbyStatus1" style="font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.08); color: var(--text-dim);">Aguardando...</span>
+        </div>
+
+        <div class="duel-player-card" id="cardPlayer2" style="background: var(--cyber-surface); border: 1px solid var(--cyber-border); border-radius: var(--radius-sm); padding: 12px 8px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+          <div class="avatar-circle opp-circ" style="width: 40px; height: 40px; font-size: 1.3rem;">🤖</div>
+          <span class="p-nick" id="lobbyNick2" style="font-size: 0.85rem;">Esperando oponente</span>
+          <span class="badge-status" id="lobbyStatus2" style="font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.08); color: var(--text-dim);">Entrando...</span>
+        </div>
+      </div>
+
+      <!-- BOTÃO ESTOU PRONTO (SÓ ATIVADO QUANDO HÁ 2 JOGADORES) -->
+      <button class="cyber-btn" id="btnToggleReady" style="width: 100%; max-width: 400px; display: none;">
+        <span id="readyBtnLabel">ESTOU PRONTO! ⚔️</span>
+      </button>
+
+      <button class="cyber-btn" id="btnCopyInviteLink" style="width: 100%; max-width: 400px;">
+        <span>Copiar Link de Convite</span>
+        <span>📋</span>
+      </button>
+
+      <button class="cyber-btn secondary" id="btnCancelWaiting" style="width: 100%; max-width: 400px;">
+        <span>Sair da Sala</span>
+      </button>
+
+      <div class="input-label" id="lobbyHelperText" style="animation: pulse-countdown 1.5s infinite; text-align: center;">
+        Aguardando oponente entrar na arena...
+      </div>
+    </section>
+
+    <!-- TELA 3: ARENA DE DUELO 1v1 -->
+    <section class="view-screen arena-screen hidden" id="screenArena">
+      <!-- CABEÇALHO DA ARENA -->
+      <div class="duel-header">
+        <div class="duel-meta-bar">
+          <span class="category-tag" id="arenaCategoryTag">🧠 Geral</span>
+          <span class="round-clock" id="arenaRoundClock">⏱️ 00:00</span>
+          <button class="nav-btn" id="btnLeaveArena" title="Abandonar partida" style="width: 28px; height: 28px; font-size: 0.75rem;">✕</button>
+        </div>
+
+        <!-- PLACAR DE DUELO VS -->
+        <div class="duel-vs-bar">
+          <div class="player-info">
+            <div class="avatar-circle">😎</div>
+            <div class="player-names">
+              <span class="p-nick" id="playerLocalNick">Você</span>
+              <span class="p-state" id="playerLocalState">Linha 1/6</span>
+            </div>
+          </div>
+
+          <div class="vs-block">
+            <span class="vs-tag">VS</span>
+          </div>
+
+          <div class="player-info opponent">
+            <div class="avatar-circle opp-circ">
+              🤖
+              <span class="typing-pulse" id="oppTypingPulse"></span>
+            </div>
+            <div class="player-names" style="text-align: right;">
+              <span class="p-nick" id="playerOppNick">Oponente</span>
+              <span class="p-state" id="playerOppState">Aguardando...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- MINI-GRID DO OPONENTE REALTIME (ANTI-SPOILER) -->
+        <div class="opponent-mini-tracker">
+          <div class="tracker-title-row">
+            <span>Progresso do Oponente em Tempo Real</span>
+            <span style="font-style: italic;">(letras ocultas)</span>
+          </div>
+          <div class="mini-grid-container" id="oppMiniGridContainer">
+            <!-- 6 linhas x 5 mini blocos gerados via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TABULEIRO DO JOGADOR LOCAL (6x5) -->
+      <div class="board-section">
+        <div class="board-grid" id="playerBoardGrid">
+          <!-- 6 linhas x 5 tiles gerados via JS -->
+        </div>
+      </div>
+
+      <!-- TECLADO VIRTUAL QWERTY PT-BR -->
+      <div class="keyboard-section">
+        <div class="cyber-keyboard" id="cyberKeyboard">
+          <!-- Linhas de teclas geradas via JS -->
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- CONTAGEM REGRESSIVA OVERLAY (3, 2, 1) -->
+  <div class="countdown-overlay hidden" id="countdownOverlay">
+    <div class="input-label" style="font-size: 1.1rem; color: #fff;">A CORRIDA VAI COMEÇAR!</div>
+    <div class="countdown-number" id="countdownNumber">3</div>
+    <div style="color: var(--accent-cyan); font-weight: 700;">Prepare-se para digitar!</div>
+  </div>
+
+  <!-- MODAL DE FIM DE PARTIDA (VITÓRIA / DERROTA) -->
+  <div class="modal-backdrop hidden" id="gameOverModal">
+    <div class="game-over-modal">
+      <div class="result-icon" id="modalResultIcon">🏆</div>
+      <h2 class="result-title" id="modalResultTitle">VITÓRIA!</h2>
+      <p id="modalResultDesc">Você foi o primeiro a decifrar a palavra secreta!</p>
+
+      <div class="secret-word-reveal">
+        <div class="input-label">Palavra Secreta</div>
+        <div class="secret-word-val" id="modalSecretWord">TERMO</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="cyber-btn" id="btnRequestRematch">
+          <span id="rematchBtnText">Pedir Revanche</span>
+          <span>🔄</span>
+        </button>
+        <button class="cyber-btn secondary" id="btnBackToLobby">
+          <span>Voltar ao Lobby</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST FLUTUANTE -->
+  <div class="toast-msg" id="toastMsg">Mensagem do sistema</div>
+
+  <!-- SCRIPTS -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

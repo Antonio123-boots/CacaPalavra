@@ -1,0 +1,16 @@
+{
+  "category": "cinema",
+  "name": "Cinema & Séries",
+  "icon": "🎬",
+  "words": [
+    "VADER", "SHREK", "FRODO", "ROCKY", "JOKER",
+    "SIMBA", "ZORRO", "BLADE", "GHOST", "ALIEN",
+    "TITAN", "NOLAN", "OSCAR", "FILME", "CORVO",
+    "FLASH", "ROBIN", "CLARK", "WAYNE", "STARK",
+    "LOGAN", "GROOT", "PETER", "MILES", "WANDA",
+    "BORAT", "HEROI", "VILAO", "DRAMA", "SERIE",
+    "PAPEL", "PLANO", "CORTE", "TRAMA", "MIDAS",
+    "FORCE", "CLONE", "DROID", "JEDI1", "JEDIS",
+    "TREK1", "RINGS", "HARRY", "RONAN", "BARBIE"
+  ]
+}

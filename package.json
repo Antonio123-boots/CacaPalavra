@@ -1,0 +1,24 @@
+{
+  "name": "termo-duelo",
+  "version": "1.0.0",
+  "description": "Jogo casual de adivinhação de palavras 1v1 em tempo real com design Arena Cyber e PWA",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js"
+  },
+  "keywords": [
+    "termo",
+    "wordle",
+    "multiplayer",
+    "socketio",
+    "pwa",
+    "cyber"
+  ],
+  "author": "Antigravity Engineering",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}
