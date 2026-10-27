@@ -1,44 +1,57 @@
-const CACHE_NAME = 'termo-duelo-cyber-v2';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'palavra-rua-shell-v1';
+const CACHE_PREFIX = 'palavra-rua-shell-';
+const APP_SHELL = [
   '/',
   '/index.html',
-  '/css/cyber-theme.css',
-  '/js/audioSynth.js',
+  '/css/game.css',
   '/js/app.js',
-  '/manifest.json'
+  '/manifest.json',
+  '/assets/icons/wordmark.svg'
 ];
 
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => caches.delete(key))
-      );
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
   );
-  self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  // Ignora chamadas de socket.io ou rotas de API da estratégia de cache
-  if (event.request.url.includes('/socket.io/') || event.request.url.includes('/api/')) {
-    return;
-  }
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys
+        .filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+        .map(key => caches.delete(key))))
+      .then(() => self.clients.claim())
+  );
+});
 
-  // Network First: sempre tenta buscar do servidor primeiro
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== self.location.origin
+    || url.pathname.startsWith('/api/') || url.pathname.startsWith('/socket.io/')) return;
+
+  const isAppShell = APP_SHELL.includes(url.pathname);
+  if (!isAppShell) return;
+
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
-        }
-        return networkResponse;
-      })
-      .catch(() => caches.match(event.request))
+    fetch(request).then(response => {
+      if (response.ok) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(request, copy))
+          .catch(error => console.error('[PWA] Falha ao armazenar recurso estático:', error));
+      }
+      return response;
+    }).catch(async error => {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+      if (request.mode === 'navigate') {
+        const shell = await caches.match('/index.html');
+        if (shell) return shell;
+      }
+      throw error;
+    })
   );
 });

@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f2">
+  <title>Termo Duelo — desafio acessível</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f6f7f2;
+      --surface: #fff;
+      --surface-soft: #eef2ed;
+      --ink: #17241f;
+      --muted: #46564f;
+      --line: #687970;
+      --accent: #145c49;
+      --accent-hover: #0c4738;
+      --focus: #8b2f00;
+      --correct: #dcefe6;
+      --present: #f8edc8;
+      --absent: #e8e9e6;
+      --shadow: 0 16px 42px rgb(23 36 31 / 8%);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font: 1rem/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    button, input, select, textarea { font: inherit; }
+    button, a, input, select, textarea { accent-color: var(--accent); }
+    a { color: var(--accent-hover); text-underline-offset: .2em; }
+    a:hover { text-decoration-thickness: .14em; }
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+      box-shadow: 0 0 0 5px var(--surface);
+    }
+    .skip-link {
+      position: absolute;
+      z-index: 5;
+      top: .5rem;
+      left: .5rem;
+      padding: .75rem 1rem;
+      transform: translateY(-160%);
+      border-radius: .5rem;
+      background: var(--ink);
+      color: #fff;
+    }
+    .skip-link:focus { transform: translateY(0); }
+    .shell { width: min(1120px, calc(100% - 2rem)); margin: 0 auto; }
+    .masthead { padding: 1.1rem 0; border-bottom: 1px solid #cbd4ce; }
+    .masthead-inner, .brand, .header-tools, .mode-switch, .section-heading, .tile-legend,
+    .button-row, .inline-controls { display: flex; align-items: center; }
+    .masthead-inner { justify-content: space-between; gap: 1.5rem; }
+    .brand { gap: .75rem; color: var(--ink); text-decoration: none; }
+    .brand-mark {
+      display: grid;
+      width: 2.5rem;
+      aspect-ratio: 1;
+      place-items: center;
+      border: 2px solid currentColor;
+      border-radius: .7rem;
+      font-weight: 850;
+      letter-spacing: -.08em;
+    }
+    .brand-name { font-size: 1.25rem; font-weight: 800; letter-spacing: -.035em; }
+    .header-tools { flex-wrap: wrap; justify-content: flex-end; gap: .55rem; }
+    .icon-button, .quiet-button {
+      min-height: 2.75rem;
+      padding: .55rem .8rem;
+      border: 1px solid var(--line);
+      border-radius: .65rem;
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .icon-button[aria-pressed="true"], .quiet-button[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: var(--surface-soft);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    main { padding: 1.7rem 0 3rem; }
+    .intro { max-width: 700px; margin-bottom: 1.25rem; }
+    .eyebrow {
+      margin: 0 0 .35rem;
+      color: var(--accent-hover);
+      font-size: .82rem;
+      font-weight: 800;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: .35rem; font-size: clamp(1.7rem, 3vw, 2.4rem); line-height: 1.15; letter-spacing: -.04em; }
+    h2 { margin-bottom: .35rem; font-size: 1.22rem; letter-spacing: -.02em; }
+    h3 { margin-bottom: .3rem; font-size: 1rem; }
+    .lede { max-width: 62ch; margin-bottom: 0; color: var(--muted); }
+    .mode-switch { width: fit-content; gap: .35rem; margin: 1.35rem 0; padding: .3rem; border: 1px solid #b8c5bd; border-radius: .85rem; background: var(--surface-soft); }
+    .mode-button {
+      min-height: 2.8rem;
+      padding: .55rem .95rem;
+      border: 0;
+      border-radius: .6rem;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .mode-button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(265px, .85fr); gap: 1.1rem; align-items: start; }
+    .panel {
+      border: 1px solid #c4cec7;
+      border-radius: 1rem;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .game-panel { padding: clamp(1rem, 3vw, 1.55rem); }
+    .section-heading { justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 1.8rem;
+      padding: .2rem .65rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-soft);
+      font-size: .82rem;
+      font-weight: 750;
+    }
+    .game-note { margin: .25rem 0 1rem; color: var(--muted); }
+    .practice-controls {
+      display: none;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .8rem;
+      margin: 1rem 0;
+      padding: 1rem;
+      border: 1px solid #9aada2;
+      border-radius: .75rem;
+      background: var(--surface-soft);
+    }
+    .practice-controls.visible { display: grid; }
+    label { display: block; margin-bottom: .35rem; font-weight: 700; }
+    select, input[type="text"], textarea {
+      width: 100%;
+      min-height: 2.9rem;
+      padding: .55rem .7rem;
+      border: 1px solid #52645b;
+      border-radius: .55rem;
+      background: var(--surface);
+      color: var(--ink);
+    }
+    .primary-button {
+      min-height: 2.9rem;
+      padding: .6rem 1rem;
+      border: 2px solid var(--accent);
+      border-radius: .6rem;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .primary-button:hover:not(:disabled) { background: var(--accent-hover); }
+    button:disabled { cursor: not-allowed; opacity: .58; }
+    .practice-controls .primary-button { grid-column: 1 / -1; }
+    .board-wrap { overflow-x: auto; padding: .15rem 0 .5rem; }
+    .board {
+      width: min(100%, 390px);
+      margin: .2rem auto 1rem;
+      border-collapse: separate;
+      border-spacing: .35rem;
+      table-layout: fixed;
+    }
+    .board caption {
+      padding: 0 0 .5rem;
+      color: var(--muted);
+      font-weight: 700;
+      text-align: left;
+    }
+    .board th { width: 2rem; color: var(--muted); font-size: .85rem; }
+    .board td { padding: 0; }
+    .tile {
+      display: grid;
+      width: 100%;
+      min-height: 3.2rem;
+      aspect-ratio: 1;
+      place-items: center;
+      border: 2px solid #718178;
+      border-radius: .45rem;
+      background: var(--surface);
+      font-size: clamp(1.15rem, 4vw, 1.6rem);
+      font-weight: 850;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+    .tile .mark { font-size: .72em; }
+    .tile.correct { border: 3px solid #145c49; background: var(--correct); }
+    .tile.present { border: 3px dashed #714500; background: var(--present); }
+    .tile.absent { border: 3px dotted #39443e; background: var(--absent); }
+    .tile.empty { border-style: solid; }
+    .tile-legend { flex-wrap: wrap; gap: .55rem 1rem; margin: 0 0 1.1rem; color: var(--ink); font-size: .88rem; }
+    .legend-item { display: inline-flex; align-items: center; gap: .4rem; }
+    .legend-symbol { display: inline-grid; width: 1.55rem; height: 1.55rem; place-items: center; border: 2px solid currentColor; border-radius: .3rem; font-weight: 850; }
+    .legend-symbol.correct { background: var(--correct); }
+    .legend-symbol.present { border-style: dashed; background: var(--present); }
+    .legend-symbol.absent { border-style: dotted; background: var(--absent); }
+    .guess-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .65rem; align-items: end; }
+    .guess-form .field { min-width: 0; }
+    .help-text { margin: .35rem 0 0; color: var(--muted); font-size: .88rem; }
+    .status-message {
+      min-height: 3.2rem;
+      margin: .9rem 0 0;
+      padding: .65rem .8rem;
+      border-left: 4px solid var(--accent);
+      border-radius: .25rem;
+      background: var(--surface-soft);
+      color: var(--ink);
+      font-weight: 650;
+    }
+    .side-column { display: grid; gap: 1.1rem; }
+    .side-panel { padding: 1.2rem; }
+    .side-panel p:last-child { margin-bottom: 0; }
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .7rem; margin: .9rem 0; }
+    .stat {
+      padding: .65rem .7rem;
+      border: 1px solid #c4cec7;
+      border-radius: .6rem;
+      background: #fbfcf9;
+    }
+    .stat strong { display: block; font-size: 1.35rem; }
+    .stat span { color: var(--muted); font-size: .82rem; }
+    .ranking-list { margin: .75rem 0; padding-left: 1.5rem; }
+    .ranking-list li { padding: .28rem 0; }
+    .ranking-list .result { color: var(--muted); }
+    .fine-print { color: var(--muted); font-size: .87rem; }
+    .share-box { display: grid; gap: .55rem; margin-top: .8rem; }
+    textarea { min-height: 6rem; resize: vertical; }
+    details { margin-top: .85rem; border-top: 1px solid #d5ddd7; padding-top: .8rem; }
+    summary { width: fit-content; color: var(--accent-hover); font-weight: 750; cursor: pointer; }
+    .footer { padding: 1rem 0 2rem; border-top: 1px solid #cbd4ce; color: var(--muted); font-size: .88rem; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    html.large-text body { font-size: 1.2rem; }
+    html.high-contrast {
+      --page: #fff;
+      --surface: #fff;
+      --surface-soft: #f0f0f0;
+      --ink: #000;
+      --muted: #222;
+      --line: #000;
+      --accent: #003b2b;
+      --accent-hover: #00271d;
+      --focus: #a00000;
+      --correct: #fff;
+      --present: #fff;
+      --absent: #ddd;
+      --shadow: 0 0 0 2px #000;
+    }
+    html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after {
+      scroll-behavior: auto !important;
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto; animation-duration: .01ms; transition-duration: .01ms; }
+    }
+    @media (max-width: 760px) {
+      .layout { grid-template-columns: 1fr; }
+      .side-column { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .side-column > :last-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 540px) {
+      .shell { width: min(100% - 1rem, 440px); }
+      .masthead-inner { align-items: flex-start; }
+      .brand-name { font-size: 1.05rem; }
+      .header-tools { gap: .35rem; }
+      .icon-button { min-height: 2.5rem; padding: .4rem .55rem; font-size: .88rem; }
+      .side-column { grid-template-columns: 1fr; }
+      .side-column > :last-child { grid-column: auto; }
+      .guess-form { grid-template-columns: 1fr; }
+      .guess-form .primary-button { width: 100%; }
+      .practice-controls { grid-template-columns: 1fr; }
+      .practice-controls .primary-button { grid-column: auto; }
+      .tile { min-height: 2.75rem; }
+    }
+    @media (forced-colors: active) {
+      .tile, .legend-symbol { forced-color-adjust: none; border-color: CanvasText; }
+      .tile.correct { border-style: solid; }
+      .tile.present { border-style: dashed; }
+      .tile.absent { border-style: dotted; }
+      .primary-button, .mode-button[aria-pressed="true"] { border: 2px solid ButtonText; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo principal</a>
+  <header class="masthead">
+    <div class="shell masthead-inner">
+      <a class="brand" href="#inicio" aria-label="Termo Duelo, início">
+        <span class="brand-mark" aria-hidden="true">TD</span>
+        <span class="brand-name">Termo Duelo</span>
+      </a>
+      <div class="header-tools" aria-label="Opções de acessibilidade">
+        <button class="icon-button" id="contrast-toggle" type="button" aria-pressed="false">Alto contraste</button>
+        <button class="icon-button" id="text-toggle" type="button" aria-pressed="false">Aumentar texto</button>
+        <button class="icon-button" id="motion-toggle" type="button" aria-pressed="false">Reduzir movimento</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell" id="conteudo">
+    <section class="intro" id="inicio" aria-labelledby="page-title">
+      <p class="eyebrow">Um desafio de palavras, no seu ritmo</p>
+      <h1 id="page-title">Descubra a palavra do dia</h1>
+      <p class="lede">Você tem até seis tentativas. Cada letra recebe uma pista por símbolo, texto e padrão visual — não apenas por cor. Jogue sem cadastro.</p>
+    </section>
+
+    <nav class="mode-switch" aria-label="Escolha o modo de jogo">
+      <button class="mode-button" id="daily-mode" type="button" aria-pressed="true">Desafio diário</button>
+      <button class="mode-button" id="practice-mode" type="button" aria-pressed="false">Modo prática</button>
+    </nav>
+
+    <div class="layout">
+      <section class="panel game-panel" aria-labelledby="game-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow" id="mode-label">Desafio diário · demonstração</p>
+            <h2 id="game-title">Palavra de 5 letras</h2>
+          </div>
+          <span class="badge" id="attempt-count">6 tentativas restantes</span>
+        </div>
+        <p class="game-note" id="mode-description">Desafio #042 · uma palavra demonstrativa fixa neste protótipo.</p>
+
+        <div class="practice-controls" id="practice-controls" aria-label="Configuração da prática">
+          <div>
+            <label for="category">Categoria</label>
+            <select id="category">
+              <option>Geral</option>
+              <option>Cinema e Séries</option>
+              <option>Esportes</option>
+              <option>Cultura Pop e Games</option>
+            </select>
+          </div>
+          <div>
+            <label for="word-length">Tamanho da palavra</label>
+            <select id="word-length">
+              <option value="4">4 letras</option>
+              <option value="5" selected>5 letras</option>
+              <option value="6">6 letras</option>
+              <option value="7">7 letras</option>
+            </select>
+          </div>
+          <button class="primary-button" id="start-practice" type="button">Iniciar nova prática</button>
+        </div>
+
+        <div class="tile-legend" aria-label="Legenda dos símbolos de feedback">
+          <span class="legend-item"><span class="legend-symbol correct" aria-hidden="true">✓</span> Letra certa e no lugar</span>
+          <span class="legend-item"><span class="legend-symbol present" aria-hidden="true">↗</span> Letra existe, em outro lugar</span>
+          <span class="legend-item"><span class="legend-symbol absent" aria-hidden="true">×</span> Letra não disponível</span>
+        </div>
+
+        <div class="board-wrap">
+          <table class="board" aria-describedby="board-help">
+            <caption>Tabuleiro de tentativas</caption>
+            <tbody id="board-body"></tbody>
+          </table>
+        </div>
+        <p class="help-text" id="board-help">Cada linha é uma tentativa. As pistas também são anunciadas por tecnologia assistiva.</p>
+
+        <form class="guess-form" id="guess-form" novalidate>
+          <div class="field">
+            <label for="guess">Seu palpite</label>
+            <input id="guess" name="guess" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="7" aria-describedby="guess-help">
+            <p class="help-text" id="guess-help">Digite uma palavra com <span id="required-length">5</span> letras. Você também pode usar o teclado físico.</p>
+          </div>
+          <button class="primary-button" id="submit-guess" type="submit">Enviar palpite</button>
+        </form>
+        <p class="status-message" id="game-status" role="status" aria-live="polite" aria-atomic="true">Pronto para jogar. Digite seu primeiro palpite.</p>
+
+        <details>
+          <summary>Como jogar</summary>
+          <p>Digite uma palavra completa e envie. ✓ marca a letra correta no lugar certo; ↗ indica uma letra que existe em outra posição; × informa que não há outra ocorrência disponível. Você tem seis tentativas. Neste protótipo, a validação de vocabulário é demonstrativa e aceita qualquer sequência de letras do tamanho indicado.</p>
+        </details>
+      </section>
+
+      <aside class="side-column" aria-label="Informações do jogo">
+        <section class="panel side-panel" aria-labelledby="stats-title">
+          <h2 id="stats-title">Suas estatísticas</h2>
+          <p class="fine-print">Exemplo demonstrativo; a prática não altera estes números.</p>
+          <div class="stats-grid">
+            <div class="stat"><strong>12</strong><span>Desafios jogados</span></div>
+            <div class="stat"><strong>9</strong><span>Vitórias</span></div>
+            <div class="stat"><strong>4</strong><span>Sequência atual</span></div>
+            <div class="stat"><strong>6</strong><span>Melhor sequência</span></div>
+          </div>
+          <p class="fine-print">A sequência conta dias consecutivos em que você concluiu o desafio. Perder um dia não apaga suas conquistas.</p>
+        </section>
+
+        <section class="panel side-panel" aria-labelledby="ranking-title">
+          <h2 id="ranking-title">Ranking de hoje</h2>
+          <p class="fine-print">Demonstração local · resultados de exemplo</p>
+          <ol class="ranking-list">
+            <li><strong>Lua</strong> <span class="result">— 3 tentativas</span></li>
+            <li><strong>Sol</strong> <span class="result">— 4 tentativas</span></li>
+            <li><strong>Você</strong> <span class="result" id="your-ranking">— ainda não terminou</span></li>
+          </ol>
+          <p class="fine-print">Quem resolve fica à frente; entre vitórias, menos tentativas. Empates são iguais. Tempo não conta.</p>
+        </section>
+
+        <section class="panel side-panel" aria-labelledby="share-title">
+          <h2 id="share-title">Compartilhe sem spoiler</h2>
+          <p class="fine-print">A resposta e as letras tentadas nunca entram no resultado compartilhado.</p>
+          <div class="share-box">
+            <button class="quiet-button" id="share-button" type="button" disabled aria-describedby="share-help">Copiar meu resultado</button>
+            <p class="help-text" id="share-help">Disponível quando o desafio diário terminar.</p>
+            <label for="share-text">Texto para compartilhar</label>
+            <textarea id="share-text" rows="3" readonly aria-describedby="share-help" placeholder="Seu resultado sem spoiler aparecerá aqui ao concluir o desafio diário."></textarea>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer class="footer">
+    <div class="shell">Protótipo acessível · Seus dados e este resultado não são enviados a um servidor.</div>
+  </footer>
+
+  <script>
+    (() => {
+      const dailyAnswer = "LIVRO";
+      const practiceWords = {
+        "4": ["CASA", "BOLA", "GATO", "LAGO"],
+        "5": ["LIVRO", "NAVEZ", "PRAIA", "FESTA"],
+        "6": ["CANÇÃO", "JANELA", "FUTEBOL", "CINEMA"],
+        "7": ["ESTRELA", "PLANETA", "CAMINHO", "CADERNO"]
+      };
+      const practiceByLength = {
+        "4": ["CASA", "BOLA", "GATO", "LAGO"],
+        "5": ["LIVRO", "PRAIA", "FESTA", "NUVEM"],
+        "6": ["JANELA", "CINEMA", "FUTSAL", "CANETA"],
+        "7": ["ESTRELA", "PLANETA", "CAMINHO", "CADERNO"]
+      };
+      const $ = (id) => document.getElementById(id);
+      const boardBody = $("board-body");
+      const status = $("game-status");
+      const guessInput = $("guess");
+      const form = $("guess-form");
+      const submitButton = $("submit-guess");
+      const shareButton = $("share-button");
+      const shareText = $("share-text");
+      const shareHelp = $("share-help");
+      let answer = dailyAnswer;
+      let mode = "daily";
+      let guesses = [];
+      let finished = false;
+      let won = false;
+
+      function normalize(value) {
+        return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+      }
+
+      function setStatus(message) {
+        status.textContent = message;
+      }
+
+      function renderBoard() {
+        boardBody.replaceChildren();
+        const length = answer.length;
+        for (let rowIndex = 0; rowIndex < 6; rowIndex += 1) {
+          const row = document.createElement("tr");
+          const rowHeading = document.createElement("th");
+          rowHeading.scope = "row";
+          rowHeading.textContent = `${rowIndex + 1}ª`;
+          row.append(rowHeading);
+          for (let column = 0; column < length; column += 1) {
+            const cell = document.createElement("td");
+            const tile = document.createElement("span");
+            tile.className = "tile empty";
+            tile.setAttribute("aria-label", `Tentativa ${rowIndex + 1}, posição ${column + 1}, vazia`);
+            tile.setAttribute("data-tile", "");
+            if (guesses[rowIndex]) {
+              const guess = guesses[rowIndex].word;
+              const letter = guess[column];
+              const feedback = guesses[rowIndex].feedback[column];
+              const symbols = { correct: "✓", present: "↗", absent: "×" };
+              const descriptions = {
+                correct: "letra certa no lugar certo",
+                present: "letra presente em outro lugar",
+                absent: "letra não disponível"
+              };
+              tile.className = `tile ${feedback}`;
+              tile.setAttribute("aria-label", `Tentativa ${rowIndex + 1}, posição ${column + 1}: ${letter}, ${descriptions[feedback]}`);
+              const letterSpan = document.createElement("span");
+              letterSpan.textContent = letter;
+              const symbolSpan = document.createElement("span");
+              symbolSpan.className = "mark";
+              symbolSpan.setAttribute("aria-hidden", "true");
+              symbolSpan.textContent = symbols[feedback];
+              tile.append(letterSpan, symbolSpan);
+            } else if (rowIndex === guesses.length && !finished) {
+              tile.textContent = guessInput.value.toUpperCase()[column] || "";
+              if (tile.textContent) {
+                tile.className = "tile";
+                tile.setAttribute("aria-label", `Tentativa ${rowIndex + 1}, posição ${column + 1}: ${tile.textContent}`);
+              }
+            }
+            cell.append(tile);
+            row.append(cell);
+          }
+          boardBody.append(row);
+        }
+        $("attempt-count").textContent = finished
+          ? `${guesses.length} de 6 tentativas usadas`
+          : `${6 - guesses.length} tentativas restantes`;
+      }
+
+      function scoreGuess(guess) {
+        const target = normalize(answer).split("");
+        const letters = normalize(guess).split("");
+        const result = Array(letters.length).fill("absent");
+        const remaining = {};
+        letters.forEach((letter, index) => {
+          if (letter === target[index]) {
+            result[index] = "correct";
+          } else {
+            remaining[target[index]] = (remaining[target[index]] || 0) + 1;
+          }
+        });
+        letters.forEach((letter, index) => {
+          if (result[index] === "correct") return;
+          if (remaining[letter] > 0) {
+            result[index] = "present";
+            remaining[letter] -= 1;
+          }
+        });
+        return result;
+      }
+
+      function makeShareResult() {
+        const marks = { correct: "🟩", present: "🟨", absent: "⬛" };
+        const grid = guesses.map((guess) => guess.feedback.map((state) => marks[state]).join("")).join("\n");
+        const outcome = won ? `${guesses.length}/6` : "X/6";
+        return `Termo Duelo #042 ${outcome}\n${grid}`;
+      }
+
+      function finishGame(didWin) {
+        finished = true;
+        won = didWin;
+        guessInput.disabled = true;
+        submitButton.disabled = true;
+        renderBoard();
+        if (mode === "daily") {
+          shareButton.disabled = false;
+          shareHelp.textContent = "Resultado pronto; a resposta e as letras não são incluídas.";
+          $("your-ranking").textContent = didWin ? `— ${guesses.length} tentativas` : "— não resolveu hoje";
+          shareText.value = makeShareResult();
+        }
+        setStatus(didWin
+          ? `Você acertou em ${guesses.length} ${guesses.length === 1 ? "tentativa" : "tentativas"}! A palavra era ${answer}.`
+          : `As seis tentativas acabaram. A palavra era ${answer}.`);
+      }
+
+      function submitGuess(event) {
+        event.preventDefault();
+        if (finished) return;
+        const word = normalize(guessInput.value.trim());
+        const lettersOnly = /^[A-ZÀ-ÖØ-Þ]+$/u.test(guessInput.value.trim());
+        if (!lettersOnly || word.length !== answer.length) {
+          setStatus(`Digite uma palavra com exatamente ${answer.length} letras. Sua tentativa continua disponível.`);
+          guessInput.focus();
+          return;
+        }
+        const feedback = scoreGuess(word);
+        guesses.push({ word, feedback });
+        guessInput.value = "";
+        renderBoard();
+        if (word === normalize(answer)) {
+          finishGame(true);
+          return;
+        }
+        if (guesses.length === 6) {
+          finishGame(false);
+          return;
+        }
+        const details = feedback.map((state, index) => {
+          const name = { correct: "certa no lugar", present: "presente em outra posição", absent: "não disponível" }[state];
+          return `${word[index]} ${name}`;
+        }).join("; ");
+        setStatus(`Palpite registrado. ${details}. Restam ${6 - guesses.length} tentativas.`);
+        guessInput.focus();
+      }
+
+      function configureGame(nextMode, nextAnswer, description) {
+        mode = nextMode;
+        answer = nextAnswer;
+        guesses = [];
+        finished = false;
+        won = false;
+        guessInput.disabled = false;
+        submitButton.disabled = false;
+        guessInput.value = "";
+        guessInput.maxLength = answer.length;
+        $("required-length").textContent = answer.length;
+        $("game-title").textContent = `Palavra de ${answer.length} letras`;
+        $("mode-label").textContent = nextMode === "daily" ? "Desafio diário · demonstração" : "Modo prática · sem ranking";
+        $("mode-description").textContent = description;
+        $("daily-mode").setAttribute("aria-pressed", String(nextMode === "daily"));
+        $("practice-mode").setAttribute("aria-pressed", String(nextMode === "practice"));
+        $("practice-controls").classList.toggle("visible", nextMode === "practice");
+        shareButton.disabled = true;
+        shareText.value = "";
+        shareHelp.textContent = "Disponível quando o desafio diário terminar.";
+        $("your-ranking").textContent = "— ainda não terminou";
+        setStatus(nextMode === "daily"
+          ? "Desafio diário iniciado. Digite seu primeiro palpite."
+          : "Prática iniciada. Este resultado não altera estatísticas nem ranking.");
+        renderBoard();
+        if (nextMode === "practice") guessInput.focus();
+      }
+
+      $("daily-mode").addEventListener("click", () => {
+        configureGame("daily", dailyAnswer, "Desafio #042 · uma palavra demonstrativa fixa neste protótipo.");
+      });
+      $("practice-mode").addEventListener("click", () => {
+        $("category").focus();
+        $("practice-controls").classList.add("visible");
+        $("daily-mode").setAttribute("aria-pressed", "false");
+        $("practice-mode").setAttribute("aria-pressed", "true");
+        $("mode-label").textContent = "Escolha uma prática";
+        $("mode-description").textContent = "Selecione uma categoria e um tamanho; a prática não afeta seu resultado diário.";
+        setStatus("Modo prática selecionado. Escolha as opções e inicie uma partida.");
+      });
+      $("start-practice").addEventListener("click", () => {
+        const length = $("word-length").value;
+        const choices = practiceByLength[length];
+        const index = Math.floor(Math.random() * choices.length);
+        configureGame("practice", choices[index], `Prática · ${$("category").value} · palavra de ${length} letras.`);
+      });
+      form.addEventListener("submit", submitGuess);
+      guessInput.addEventListener("input", () => {
+        guessInput.value = guessInput.value.toLocaleUpperCase("pt-BR").replace(/[^A-ZÀ-ÖØ-Þ]/gu, "");
+        renderBoard();
+      });
+
+      shareButton.addEventListener("click", async () => {
+        if (mode !== "daily" || !finished) return;
+        shareText.value = makeShareResult();
+        try {
+          await navigator.clipboard.writeText(shareText.value);
+          setStatus("Resultado copiado. Ele não contém a resposta nem as letras tentadas.");
+        } catch {
+          shareText.focus();
+          shareText.select();
+          setStatus("Não foi possível copiar automaticamente. O texto está selecionado para você copiar.");
+        }
+      });
+
+      [
+        ["contrast-toggle", "high-contrast"],
+        ["text-toggle", "large-text"],
+        ["motion-toggle", "reduce-motion"]
+      ].forEach(([buttonId, className]) => {
+        $(buttonId).addEventListener("click", (event) => {
+          const pressed = event.currentTarget.getAttribute("aria-pressed") !== "true";
+          document.documentElement.classList.toggle(className, pressed);
+          event.currentTarget.setAttribute("aria-pressed", String(pressed));
+        });
+      });
+
+      configureGame("daily", dailyAnswer, "Desafio #042 · uma palavra demonstrativa fixa neste protótipo.");
+    })();
+  </script>
+</body>
+</html>

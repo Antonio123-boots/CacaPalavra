@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f0e8">
+  <title>Palavra de Rua — desafio diário</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f3f0e8; --paper-dark: #e7e2d7; --ink: #172f2c;
+      --ink-soft: #50615a; --line: #c9c7bc; --leaf: #275b4a;
+      --sun: #f3c84d; --sun-dark: #684f0b; --coral: #d7795f;
+      --white: #fffdf7; --serif: Georgia, "Times New Roman", serif;
+      --sans: "Segoe UI", Arial, sans-serif; --mono: "SFMono-Regular", Consolas, monospace;
+      --shadow: 7px 7px 0 rgba(23, 47, 44, .1);
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--paper); scroll-behavior: smooth; }
+    body {
+      margin: 0; min-width: 320px; color: var(--ink); background-color: var(--paper);
+      background-image: radial-gradient(rgba(23,47,44,.075) .65px, transparent .65px);
+      background-size: 7px 7px; font-family: var(--sans); font-size: 14px; line-height: 1.45;
+    }
+    button, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--coral); outline-offset: 3px; }
+    .page { width: min(1240px, calc(100% - 56px)); margin: 0 auto; }
+    .masthead { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 21px 0 17px; border-bottom: 1px solid var(--ink); }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+    .brand-mark { display: grid; width: 37px; height: 37px; place-items: center; background: var(--leaf); color: var(--paper); font: 700 20px var(--serif); transform: rotate(-5deg); }
+    .brand-name { font: 700 18px var(--serif); letter-spacing: -.03em; }
+    .brand-note { display: block; margin-top: 1px; color: var(--ink-soft); font: 9px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+    .mast-meta { display: flex; align-items: center; gap: 11px; font: 10px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--ink-soft); }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 3px rgba(215,121,95,.15); }
+    .issue { border-left: 1px solid var(--line); padding-left: 12px; }
+    .hero { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 30px; align-items: end; padding: 36px 0 24px; border-bottom: 1px solid var(--line); }
+    .eyebrow, .section-kicker { color: var(--leaf); font: 700 10px var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+    .hero h1 { margin: 8px 0; max-width: 700px; font: 400 clamp(38px, 5vw, 64px)/.98 var(--serif); letter-spacing: -.055em; }
+    .hero h1 em { color: var(--coral); font-weight: 400; }
+    .hero-copy { max-width: 540px; margin: 0; color: var(--ink-soft); font-size: 14px; }
+    .hero-stamp { justify-self: end; position: relative; width: 192px; padding: 16px 14px 13px; border: 1px solid var(--ink); transform: rotate(2deg); text-align: center; }
+    .hero-stamp:before { content: ""; position: absolute; inset: 4px; border: 1px solid var(--line); pointer-events: none; }
+    .stamp-big { display: block; font: 700 25px/.9 var(--serif); letter-spacing: -.04em; }
+    .stamp-small { display: block; margin-top: 7px; font: 9px var(--mono); letter-spacing: .13em; text-transform: uppercase; }
+    .tabs-wrap { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 0 16px; }
+    .tabs { display: flex; gap: 7px; }
+    .tab { cursor: pointer; border: 1px solid transparent; background: transparent; padding: 9px 13px; font: 700 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; transition: background .2s, color .2s, border .2s; }
+    .tab:hover { border-color: var(--line); }
+    .tab[aria-pressed="true"] { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+    .daily-marker { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); font: 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .marker-square { width: 10px; height: 10px; background: var(--sun); border: 1px solid var(--ink); }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-items: start; padding: 0 0 54px; }
+    .game-panel, .side-panel { border: 1px solid var(--ink); background: rgba(255,253,247,.7); box-shadow: var(--shadow); }
+    .game-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .game-head h2 { margin: 4px 0 0; font: 400 26px/1.1 var(--serif); letter-spacing: -.03em; }
+    .game-sub { margin-top: 5px; color: var(--ink-soft); font-size: 12px; }
+    .attempt-count { flex: 0 0 auto; padding: 7px 9px; border: 1px solid var(--line); text-align: center; font: 10px var(--mono); letter-spacing: .04em; }
+    .attempt-count b { color: var(--leaf); font-size: 15px; }
+    .demo-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 4px 7px; background: #f4e3d8; color: #733d2f; font: 700 9px var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+    .demo-badge:before { content: "✳"; font-size: 12px; }
+    .practice-controls { display: none; gap: 8px; align-items: center; margin: 0 20px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
+    body.is-practice .practice-controls { display: flex; flex-wrap: wrap; }
+    .practice-label { font: 700 9px var(--mono); color: var(--ink-soft); letter-spacing: .1em; text-transform: uppercase; }
+    .practice-controls select { max-width: 200px; padding: 7px 25px 7px 8px; border: 1px solid var(--line); color: var(--ink); background: var(--white); font-size: 11px; }
+    .board-wrap { padding: 17px 18px 12px; }
+    .board { display: grid; grid-template-columns: repeat(var(--word-length, 5), minmax(0, 56px)); grid-auto-rows: 53px; gap: 7px; justify-content: center; margin: 0 auto; }
+    .tile { display: grid; place-items: center; position: relative; border: 1px solid #b9b9ae; background: var(--white); font: 700 23px var(--mono); text-transform: uppercase; transition: transform .13s, background .2s; }
+    .tile.filled { border: 2px solid #718079; animation: pop .12s ease-out; }
+    .tile.correct { border-color: var(--leaf); background: var(--leaf); color: white; }
+    .tile.present { border-color: var(--sun-dark); background: var(--sun); color: #34280a; }
+    .tile.absent { border-color: #50615a; background: #66736c; color: white; }
+    .tile .tile-symbol { position: absolute; right: 3px; bottom: 1px; font: 700 9px var(--sans); opacity: .9; }
+    .tile.shake { animation: shake .3s ease-in-out; }
+    @keyframes pop { 50% { transform: scale(1.06); } }
+    @keyframes shake { 20%,60% { transform: translateX(-4px); } 40%,80% { transform: translateX(4px); } }
+    .board-caption { display: flex; justify-content: space-between; align-items: center; gap: 10px; max-width: 308px; margin: 10px auto 0; color: var(--ink-soft); font: 9px var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+    .legend { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 7px 18px 12px; }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; color: var(--ink-soft); font-size: 10px; }
+    .legend i { display: grid; width: 16px; height: 16px; place-items: center; border: 1px solid; font: 700 9px var(--sans); font-style: normal; }
+    .legend .l-correct { color: white; background: var(--leaf); border-color: var(--leaf); }
+    .legend .l-present { color: #34280a; background: var(--sun); border-color: var(--sun-dark); }
+    .legend .l-absent { color: white; background: #66736c; border-color: #50615a; }
+    .keyboard { display: grid; gap: 6px; padding: 14px 18px 18px; border-top: 1px solid var(--line); background: rgba(231,226,215,.42); }
+    .key-row { display: flex; justify-content: center; gap: 5px; }
+    .key { min-width: 31px; height: 43px; padding: 0 5px; border: 1px solid #c2c2b8; border-bottom-width: 3px; background: #fffdf7; cursor: pointer; font: 700 12px var(--mono); transition: transform .08s, background .16s; }
+    .key:hover { background: white; transform: translateY(-1px); }
+    .key:active { transform: translateY(1px); border-bottom-width: 1px; }
+    .key.wide { min-width: 56px; font: 700 9px var(--mono); letter-spacing: -.02em; }
+    .key.correct { color: white; background: var(--leaf); border-color: var(--leaf); }
+    .key.present { color: #34280a; background: var(--sun); border-color: var(--sun-dark); }
+    .key.absent { color: white; background: #66736c; border-color: #50615a; }
+    .hint-line { min-height: 34px; padding: 8px 20px 11px; color: var(--ink-soft); font-size: 11px; text-align: center; }
+    .hint-line.error { color: #9c3e2e; font-weight: 700; }
+    .hint-line.success { color: var(--leaf); font-weight: 700; }
+    .side-panel { margin-bottom: 17px; }
+    .side-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 15px 11px; border-bottom: 1px solid var(--line); }
+    .side-head h3 { margin: 0; font: 400 20px var(--serif); letter-spacing: -.03em; }
+    .side-no { color: var(--ink-soft); font: 9px var(--mono); text-transform: uppercase; letter-spacing: .09em; }
+    .stat-body { padding: 14px 15px 15px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat { text-align: center; padding: 7px 2px 6px; border-right: 1px solid var(--line); }
+    .stat:last-child { border: 0; }
+    .stat strong { display: block; font: 400 24px/.95 var(--serif); }
+    .stat span { display: block; margin-top: 5px; color: var(--ink-soft); font: 8px var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+    .streak { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding: 10px 11px; background: #e9eee5; border-left: 3px solid var(--leaf); }
+    .streak-label { color: var(--ink-soft); font: 9px var(--mono); text-transform: uppercase; letter-spacing: .07em; }
+    .streak-value { font: 700 12px var(--mono); }
+    .distribution { margin-top: 15px; }
+    .distribution-title { margin-bottom: 8px; color: var(--ink-soft); font: 9px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .dist-row { display: grid; grid-template-columns: 15px 1fr 22px; align-items: center; gap: 7px; margin: 4px 0; color: var(--ink-soft); font: 10px var(--mono); }
+    .dist-track { height: 15px; background: #ebe8de; }
+    .dist-fill { display: flex; height: 100%; min-width: 22px; align-items: center; justify-content: flex-end; padding-right: 5px; background: var(--leaf); color: white; font: 700 9px var(--mono); }
+    .rank-list { list-style: none; margin: 0; padding: 0; }
+    .rank-row { display: grid; grid-template-columns: 25px 1fr auto; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: 1px solid #e1ded4; }
+    .rank-row:last-child { border-bottom: 0; }
+    .rank-pos { color: var(--ink-soft); font: 10px var(--mono); }
+    .rank-name { font-size: 11px; font-weight: 700; }
+    .rank-name small { display: block; color: var(--ink-soft); font: 9px var(--sans); font-weight: 400; }
+    .rank-score { display: flex; align-items: center; gap: 5px; font: 700 10px var(--mono); }
+    .rank-stars { color: var(--coral); letter-spacing: -.1em; font-size: 9px; }
+    .rank-note { margin: 0; padding: 10px 14px 12px; color: var(--ink-soft); font-size: 9px; line-height: 1.5; border-top: 1px dashed var(--line); }
+    .share-panel { padding: 14px 15px 15px; }
+    .share-copy { margin: 0 0 10px; color: var(--ink-soft); font-size: 11px; }
+    .share-preview { min-height: 55px; margin-bottom: 11px; padding: 9px; background: #ece9df; color: var(--ink-soft); font: 10px/1.5 var(--mono); white-space: pre-line; }
+    .share-button { display: flex; width: 100%; justify-content: center; gap: 8px; padding: 11px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper); cursor: pointer; font: 700 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; transition: background .2s, color .2s; }
+    .share-button:hover:not(:disabled) { background: var(--sun); color: var(--ink); }
+    .share-button:disabled { opacity: .45; cursor: not-allowed; }
+    .practice-note { display: none; margin: 0 0 17px; padding: 11px 13px; border: 1px dashed var(--leaf); background: #eef0e7; color: var(--ink-soft); font-size: 11px; }
+    body.is-practice .practice-note { display: block; }
+    .footer { display: flex; justify-content: space-between; gap: 15px; padding: 14px 0 25px; border-top: 1px solid var(--ink); color: var(--ink-soft); font: 9px var(--mono); letter-spacing: .05em; text-transform: uppercase; }
+    .toast { position: fixed; z-index: 3; left: 50%; bottom: 22px; max-width: calc(100% - 30px); padding: 12px 17px; background: var(--ink); color: var(--paper); box-shadow: 0 4px 20px #172f2c33; font-size: 12px; transform: translate(-50%, 18px); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (max-width: 850px) {
+      .page { width: min(100% - 36px, 680px); }
+      .hero { grid-template-columns: 1fr 170px; gap: 18px; }
+      .hero-stamp { width: 165px; }
+      .layout { grid-template-columns: minmax(0, 1fr) 270px; gap: 18px; }
+      .game-head { padding: 15px; }
+      .board-wrap { padding-left: 10px; padding-right: 10px; }
+      .keyboard { padding-left: 8px; padding-right: 8px; gap: 5px; }
+      .key-row { gap: 4px; }
+      .key { min-width: clamp(24px, 4vw, 32px); height: 40px; padding: 0 3px; }
+      .key.wide { min-width: 46px; }
+    }
+    @media (max-width: 680px) {
+      body { font-size: 13px; }
+      .page { width: min(100% - 28px, 500px); }
+      .masthead { padding: 14px 0; }
+      .brand-mark { width: 33px; height: 33px; }
+      .brand-name { font-size: 16px; }
+      .mast-meta { font-size: 8px; gap: 8px; }
+      .issue { padding-left: 8px; }
+      .hero { grid-template-columns: 1fr; padding: 27px 0 20px; }
+      .hero h1 { font-size: clamp(42px, 12vw, 58px); }
+      .hero-copy { max-width: 440px; font-size: 13px; }
+      .hero-stamp { position: absolute; top: 91px; right: max(14px, calc((100vw - 500px) / 2)); width: 92px; padding: 10px 6px; opacity: .9; }
+      .stamp-big { font-size: 19px; }
+      .stamp-small { font-size: 7px; }
+      .tabs-wrap { padding: 13px 0; }
+      .tab { padding: 8px 10px; font-size: 10px; }
+      .daily-marker { font-size: 8px; }
+      .layout { display: flex; flex-direction: column; gap: 17px; padding-bottom: 34px; }
+      .main-column, .aside-column { width: 100%; }
+      .game-panel { box-shadow: 4px 4px 0 rgba(23,47,44,.1); }
+      .game-head { padding: 14px 13px; }
+      .game-head h2 { font-size: 23px; }
+      .game-sub { font-size: 10px; }
+      .attempt-count { padding: 6px 7px; font-size: 9px; }
+      .board-wrap { padding: 14px 10px 9px; }
+      .board { grid-auto-rows: clamp(42px, 12vw, 49px); gap: 6px; }
+      .tile { font-size: 20px; }
+      .keyboard { gap: 5px; padding: 12px 5px 13px; }
+      .key-row { gap: clamp(3px, 1vw, 5px); }
+      .key { flex: 1 1 0; min-width: 0; max-width: 37px; height: 42px; font-size: 11px; }
+      .key.wide { flex: 1.7 1 0; min-width: 43px; max-width: 56px; font-size: 8px; }
+      .side-panel { margin-bottom: 14px; }
+      .side-head h3 { font-size: 19px; }
+      .stat-grid { max-width: 340px; }
+      .footer { font-size: 8px; }
+    }
+    @media (max-width: 380px) {
+      .page { width: calc(100% - 20px); }
+      .mast-meta { max-width: 115px; line-height: 1.3; }
+      .hero-stamp { right: 10px; top: 90px; }
+      .hero h1 { max-width: 78%; font-size: 40px; }
+      .daily-marker { max-width: 120px; line-height: 1.3; }
+      .board { grid-auto-rows: 41px; gap: 5px; }
+      .key { height: 39px; }
+      .game-head h2 { font-size: 21px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <a class="brand" href="#inicio" aria-label="Palavra de Rua, início">
+        <span class="brand-mark" aria-hidden="true">P.</span>
+        <span><span class="brand-name">palavra de rua</span><span class="brand-note">um caderno de palavras</span></span>
+      </a>
+      <div class="mast-meta"><span class="live-dot" aria-hidden="true"></span><span>uma pausa, uma palavra</span><span class="issue">n.º 027</span></div>
+    </header>
+
+    <section class="hero" id="inicio" aria-labelledby="page-title">
+      <div>
+        <div class="eyebrow">Edição de hoje <span id="date-label">· 27 OUT 2026</span></div>
+        <h1 id="page-title">Uma palavra.<br><em>Seis chances.</em></h1>
+        <p class="hero-copy">O mesmo desafio para todo mundo, uma vez por dia. Encontre a palavra escondida e compare seu caminho — sem pressa, sem spoiler.</p>
+      </div>
+      <div class="hero-stamp" aria-label="Desafio diário número 027">
+        <span class="stamp-big">27<span style="color:var(--coral)">/</span>10</span>
+        <span class="stamp-small">desafio diário<br>n.º 027 · demonstração</span>
+      </div>
+    </section>
+
+    <nav class="tabs-wrap" aria-label="Modos de jogo">
+      <div class="tabs">
+        <button class="tab" id="daily-tab" type="button" aria-pressed="true">01 · Diário</button>
+        <button class="tab" id="practice-tab" type="button" aria-pressed="false">02 · Prática</button>
+      </div>
+      <div class="daily-marker"><span class="marker-square" aria-hidden="true"></span><span id="mode-marker">desafio de hoje · 5 letras</span></div>
+    </nav>
+
+    <main class="layout">
+      <section class="main-column" aria-label="Partida">
+        <div class="practice-note">Modo de prática: escolha um tema e um tamanho de 4 a 7 letras. Esta rodada não altera estatísticas nem ranking diário.</div>
+        <section class="game-panel" aria-labelledby="game-title">
+          <div class="game-head">
+            <div>
+              <div class="section-kicker" id="game-kicker">o desafio de hoje</div>
+              <h2 id="game-title">Qual é a palavra?</h2>
+              <div class="game-sub" id="game-sub">5 letras <span aria-hidden="true">·</span> até 6 tentativas</div>
+              <span class="demo-badge">partida fictícia · demonstração</span>
+            </div>
+            <div class="attempt-count" aria-live="polite"><b id="attempts-left">5</b><br>tentativas<br>restantes</div>
+          </div>
+          <div class="practice-controls" aria-label="Preferências da prática">
+            <label class="practice-label" for="category-select">Tema</label>
+            <select id="category-select">
+              <option>Geral</option><option>Cinema e Séries</option><option>Esportes</option><option>Cultura Pop e Games</option>
+            </select>
+            <label class="practice-label" for="length-select">Letras</label>
+            <select id="length-select" aria-label="Comprimento da palavra">
+              <option value="4">4</option><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option>
+            </select>
+          </div>
+          <div class="board-wrap">
+            <div class="board" id="board" role="grid" aria-label="Tabuleiro de seis tentativas; uma tentativa demonstrativa"></div>
+            <div class="board-caption"><span id="board-caption-left">palpite 01 · demonstração</span><span id="board-caption-right">05 restantes</span></div>
+          </div>
+          <div class="legend" aria-label="Legenda das pistas">
+            <span><i class="l-correct">✓</i> posição certa</span>
+            <span><i class="l-present">↗</i> existe, outra casa</span>
+            <span><i class="l-absent">×</i> não aparece</span>
+          </div>
+          <div class="keyboard" id="keyboard" aria-label="Teclado virtual"></div>
+          <div class="hint-line" id="message" role="status" aria-live="polite">Demonstração: um palpite já foi enviado. Continue digitando.</div>
+        </section>
+      </section>
+
+      <aside class="aside-column" aria-label="Painel de comunidade">
+        <section class="side-panel" aria-labelledby="stats-title">
+          <div class="side-head"><h3 id="stats-title">Seu caderno</h3><span class="side-no">desde o começo</span></div>
+          <div class="stat-body">
+            <div class="stat-grid" aria-label="Estatísticas fictícias">
+              <div class="stat"><strong>18</strong><span>jogos</span></div>
+              <div class="stat"><strong>72<small style="font:12px var(--serif)">%</small></strong><span>vitórias</span></div>
+              <div class="stat"><strong>4</strong><span>sequência</span></div>
+              <div class="stat"><strong>3,2</strong><span>média</span></div>
+            </div>
+            <div class="streak"><span class="streak-label">melhor sequência</span><span class="streak-value">✳ 07 dias</span></div>
+            <div class="distribution">
+              <div class="distribution-title">tentativas até acertar</div>
+              <div class="dist-row"><span>1</span><div class="dist-track"><div class="dist-fill" style="width:13%">1</div></div><span>01</span></div>
+              <div class="dist-row"><span>2</span><div class="dist-track"><div class="dist-fill" style="width:38%">3</div></div><span>03</span></div>
+              <div class="dist-row"><span>3</span><div class="dist-track"><div class="dist-fill" style="width:63%">5</div></div><span>05</span></div>
+              <div class="dist-row"><span>4</span><div class="dist-track"><div class="dist-fill" style="width:50%">4</div></div><span>04</span></div>
+              <div class="dist-row"><span>5</span><div class="dist-track"><div class="dist-fill" style="width:25%">2</div></div><span>02</span></div>
+              <div class="dist-row"><span>6</span><div class="dist-track"><div class="dist-fill" style="width:13%">1</div></div><span>01</span></div>
+            </div>
+            <div class="demo-badge">dados fictícios</div>
+          </div>
+        </section>
+
+        <section class="side-panel" aria-labelledby="ranking-title">
+          <div class="side-head"><h3 id="ranking-title">Na mesma página</h3><span class="side-no">desafio n.º 027</span></div>
+          <ol class="rank-list" aria-label="Ranking fictício do desafio diário">
+            <li class="rank-row"><span class="rank-pos">01</span><span class="rank-name">bia do sul<small>resolveu em 2</small></span><span class="rank-score"><span class="rank-stars">✳✳</span> 2/6</span></li>
+            <li class="rank-row"><span class="rank-pos">02</span><span class="rank-name">cactoazul<small>resolveu em 3</small></span><span class="rank-score"><span class="rank-stars">✳✳✳</span> 3/6</span></li>
+            <li class="rank-row"><span class="rank-pos">03</span><span class="rank-name">maré mansa<small>resolveu em 3</small></span><span class="rank-score"><span class="rank-stars">✳✳✳</span> 3/6</span></li>
+            <li class="rank-row"><span class="rank-pos">04</span><span class="rank-name">gui_78<small>resolveu em 4</small></span><span class="rank-score"><span class="rank-stars">✳✳✳✳</span> 4/6</span></li>
+          </ol>
+          <p class="rank-note">Demonstração fictícia. Classificação por acerto e, entre acertos, menor número de tentativas. Empates dividem posição; tempo não conta.</p>
+        </section>
+
+        <section class="side-panel" aria-labelledby="share-title">
+          <div class="side-head"><h3 id="share-title">Leve adiante</h3><span class="side-no">sem spoiler</span></div>
+          <div class="share-panel">
+            <p class="share-copy">Ao terminar, compartilhe só o caminho — nunca a palavra.</p>
+            <div class="share-preview" id="share-preview">Palavra de Rua · 027
+□□□□□ · resultado demonstrativo</div>
+            <button type="button" class="share-button" id="share-button" disabled><span aria-hidden="true">↗</span> Compartilhar resultado</button>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="footer"><span>Palavra de Rua · protótipo visual</span><span>feito para uma pausa breve ✳</span></footer>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const MAX_TRIES = 6;
+      const dailyAnswer = 'FAROL';
+      const demoGuess = 'LUGAR';
+      const practiceAnswers = { 4: 'MARE', 5: 'TRAMA', 6: 'JARDIM', 7: 'MUSICAL' };
+      const keyboardRows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+      const board = document.getElementById('board');
+      const keyboard = document.getElementById('keyboard');
+      const message = document.getElementById('message');
+      const attemptsLeft = document.getElementById('attempts-left');
+      const modeMarker = document.getElementById('mode-marker');
+      const gameTitle = document.getElementById('game-title');
+      const gameKicker = document.getElementById('game-kicker');
+      const gameSub = document.getElementById('game-sub');
+      const shareButton = document.getElementById('share-button');
+      const sharePreview = document.getElementById('share-preview');
+      const lengthSelect = document.getElementById('length-select');
+      const categorySelect = document.getElementById('category-select');
+      const toast = document.getElementById('toast');
+      let practice = false;
+      let answer = dailyAnswer;
+      let guesses = [demoGuess];
+      let current = '';
+      let finished = false;
+      let toastTimer;
+
+      const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+      const letters = value => Array.from(normalize(value));
+      const showToast = text => {
+        toast.textContent = text;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+      };
+      const scoreGuess = (guess, target) => {
+        const g = letters(guess), t = letters(target);
+        const result = Array(g.length).fill('absent');
+        const remaining = t.slice();
+        g.forEach((letter, index) => {
+          if (letter === t[index]) { result[index] = 'correct'; remaining[index] = null; }
+        });
+        g.forEach((letter, index) => {
+          if (result[index] !== 'correct') {
+            const found = remaining.indexOf(letter);
+            if (found !== -1) { result[index] = 'present'; remaining[found] = null; }
+          }
+        });
+        return result;
+      };
+      const symbolFor = state => state === 'correct' ? '✓' : state === 'present' ? '↗' : '×';
+      const setMessage = (text, kind = '') => { message.textContent = text; message.className = `hint-line ${kind}`; };
+
+      function buildKeyboard() {
+        keyboard.innerHTML = '';
+        keyboardRows.forEach((rowLetters, rowIndex) => {
+          const row = document.createElement('div');
+          row.className = 'key-row';
+          if (rowIndex === 2) row.append(createKey('⌫', 'Backspace', true));
+          Array.from(rowLetters).forEach(letter => row.append(createKey(letter, letter, false)));
+          if (rowIndex === 2) {
+            row.append(createKey('Ç', 'Ç', false));
+            row.append(createKey('ENVIAR', 'Enter', true));
+          }
+          keyboard.append(row);
+        });
+      }
+      function createKey(label, value, wide) {
+        const key = document.createElement('button');
+        key.type = 'button'; key.className = `key${wide ? ' wide' : ''}`; key.textContent = label;
+        key.setAttribute('aria-label', value === 'Backspace' ? 'Apagar letra' : value === 'Enter' ? 'Enviar palpite' : `Digitar ${value}`);
+        key.addEventListener('click', () => handleKey(value));
+        return key;
+      }
+      function updateKeyboard() {
+        const best = {};
+        guesses.forEach(guess => scoreGuess(guess, answer).forEach((state, index) => {
+          const letter = letters(guess)[index];
+          const priority = { absent: 1, present: 2, correct: 3 };
+          if (!best[letter] || priority[state] > priority[best[letter]]) best[letter] = state;
+        }));
+        keyboard.querySelectorAll('.key').forEach(key => {
+          const value = key.getAttribute('aria-label').replace('Digitar ', '');
+          key.classList.remove('correct', 'present', 'absent');
+          if (best[value]) key.classList.add(best[value]);
+        });
+      }
+      function render() {
+        const size = letters(answer).length;
+        board.style.setProperty('--word-length', size);
+        board.innerHTML = '';
+        Array.from({ length: MAX_TRIES }, (_, index) => {
+          const guess = guesses[index] || (index === guesses.length && !finished ? current : '');
+          const scored = guesses[index] ? scoreGuess(guesses[index], answer) : [];
+          Array.from({ length: size }, (_, letterIndex) => {
+            const tile = document.createElement('div');
+            tile.className = 'tile'; tile.setAttribute('role', 'gridcell');
+            const letter = letters(guess)[letterIndex] || '';
+            if (letter) tile.classList.add(guesses[index] ? scored[letterIndex] : 'filled');
+            tile.textContent = letter;
+            if (guesses[index]) {
+              const symbol = document.createElement('span'); symbol.className = 'tile-symbol'; symbol.textContent = symbolFor(scored[letterIndex]);
+              tile.append(symbol);
+              const stateText = { correct: 'posição certa', present: 'presente em outra posição', absent: 'ausente' }[scored[letterIndex]];
+              tile.setAttribute('aria-label', `${letter}: ${stateText}`);
+            } else if (letter) tile.setAttribute('aria-label', `${letter} digitada`);
+            board.append(tile);
+          });
+        });
+        const remaining = Math.max(0, MAX_TRIES - guesses.length);
+        attemptsLeft.textContent = remaining;
+        document.getElementById('board-caption-left').textContent = finished ? 'rodada encerrada' : `palpite ${String(guesses.length + 1).padStart(2, '0')} · ${practice ? 'prática' : 'demonstração'}`;
+        document.getElementById('board-caption-right').textContent = `${String(remaining).padStart(2, '0')} restantes`;
+        updateKeyboard();
+      }
+      function resetRound(isPractice = practice) {
+        practice = isPractice;
+        answer = practice ? practiceAnswers[Number(lengthSelect.value)] : dailyAnswer;
+        guesses = practice ? [] : [demoGuess];
+        current = ''; finished = false;
+        document.body.classList.toggle('is-practice', practice);
+        document.getElementById('daily-tab').setAttribute('aria-pressed', String(!practice));
+        document.getElementById('practice-tab').setAttribute('aria-pressed', String(practice));
+        gameTitle.textContent = practice ? 'Uma palavra para treinar' : 'Qual é a palavra?';
+        gameKicker.textContent = practice ? 'fora do ranking, só por prazer' : 'o desafio de hoje';
+        gameSub.textContent = `${letters(answer).length} letras · até 6 tentativas`;
+        modeMarker.textContent = practice ? `prática · ${letters(answer).length} letras` : 'desafio de hoje · 5 letras';
+        shareButton.disabled = true;
+        sharePreview.textContent = 'Palavra de Rua · 027\n□□□□□ · resultado demonstrativo';
+        setMessage(practice ? 'Prática iniciada. Palpites válidos não afetam o desafio diário.' : 'Demonstração: um palpite já foi enviado. Continue digitando.');
+        render();
+      }
+      function handleKey(key) {
+        if (finished) { showToast('Esta rodada terminou. Troque de modo para jogar novamente.'); return; }
+        if (key === 'Backspace') { current = Array.from(current).slice(0, -1).join(''); render(); return; }
+        if (key === 'Enter') { submitGuess(); return; }
+        const normalized = normalize(key);
+        if (/^[A-ZÇ]$/.test(normalized) && Array.from(current).length < letters(answer).length) {
+          current += normalized; setMessage(''); render();
+        }
+      }
+      function submitGuess() {
+        const guess = normalize(current);
+        if (Array.from(guess).length !== letters(answer).length) {
+          setMessage(`Sua palavra precisa ter ${letters(answer).length} letras.`, 'error');
+          board.querySelectorAll('.tile').forEach((tile, index) => {
+            if (index >= guesses.length * letters(answer).length && index < (guesses.length + 1) * letters(answer).length) {
+              tile.classList.remove('shake'); void tile.offsetWidth; tile.classList.add('shake');
+            }
+          });
+          return;
+        }
+        guesses.push(guess); current = '';
+        if (guess === normalize(answer)) {
+          finished = true;
+          setMessage(practice ? 'Boa! Prática concluída — suas estatísticas diárias não mudam.' : 'Você encontrou a palavra! Resultado demonstrativo concluído.', 'success');
+          enableShare();
+        } else if (guesses.length >= MAX_TRIES) {
+          finished = true;
+          setMessage(`Fim de jogo. A resposta demonstrativa era ${answer}.`, 'error');
+          enableShare();
+        } else setMessage('Palpite demonstrativo aceito. Veja as pistas e tente outra vez.');
+        render();
+      }
+      function enableShare() {
+        shareButton.disabled = false;
+        const grid = guesses.map(guess => scoreGuess(guess, answer).map(state => state === 'correct' ? '🟩' : state === 'present' ? '🟨' : '⬛').join('')).join('\n');
+        sharePreview.textContent = `Palavra de Rua · 027 · ${guesses.length}/6\n${grid}\nsem spoiler · demonstração`;
+      }
+      document.addEventListener('keydown', event => {
+        if (event.ctrlKey || event.metaKey || event.altKey || event.target.matches('select, input, textarea')) return;
+        if (event.key === 'Enter' || event.key === 'Backspace' || /^[a-zA-ZçÇáéíóúãõâêô]$/.test(event.key)) {
+          event.preventDefault(); handleKey(event.key);
+        }
+      });
+      document.getElementById('daily-tab').addEventListener('click', () => resetRound(false));
+      document.getElementById('practice-tab').addEventListener('click', () => resetRound(true));
+      lengthSelect.addEventListener('change', () => { if (practice) resetRound(true); });
+      categorySelect.addEventListener('change', () => { if (practice) setMessage(`Tema ${categorySelect.value} selecionado · conteúdo fictício de demonstração.`); });
+      shareButton.addEventListener('click', async () => {
+        const text = sharePreview.textContent;
+        try {
+          if (navigator.share) await navigator.share({ title: 'Palavra de Rua', text });
+          else if (navigator.clipboard) { await navigator.clipboard.writeText(text); showToast('Resultado sem spoiler copiado.'); }
+          else showToast('Compartilhamento demonstrativo pronto — selecione e copie o cartão.');
+        } catch (error) { if (error.name !== 'AbortError') showToast('Não foi possível compartilhar agora.'); }
+      });
+      buildKeyboard();
+      resetRound(false);
+    })();
+  </script>
+</body>
+</html>

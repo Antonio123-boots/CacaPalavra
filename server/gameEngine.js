@@ -16,6 +16,7 @@ class GameEngine {
       if (file.endsWith('.json')) {
         const filePath = path.join(wordsDir, file);
         const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        if (typeof data.category !== 'string' || !Array.isArray(data.words)) return;
         this.dictionaries[data.category] = data;
         
         data.words.forEach(w => {

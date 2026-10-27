@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const path = require('path');
 const roomManager = require('./roomManager');
 const gameEngine = require('./gameEngine');
+const { registerSoloGameRoutes } = require('./soloGame');
 
 const app = express();
 const server = http.createServer(app);
@@ -22,11 +23,6 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Rota de API para obter as categorias disponíveis
 app.get('/api/categories', (req, res) => {
   res.json(gameEngine.getCategories());
-});
-
-// Fallback para SPA / PWA
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // GESTÃO DE EVENTOS EM TEMPO REAL (SOCKET.IO)
@@ -234,9 +230,27 @@ function startMatchWithCountdown(room) {
   }, 1000);
 }
 
-server.listen(PORT, () => {
-  console.log(`====================================================`);
-  console.log(`⚔️  TERMO DUELO (Arena Cyber 1v1 PWA) no ar!`);
-  console.log(`📡 Servidor ativo na porta: http://localhost:${PORT}`);
-  console.log(`====================================================`);
-});
+registerSoloGameRoutes(app)
+  .then(() => {
+    // O fallback é registrado depois das APIs para não interceptar requisições /api.
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, '../public/index.html'));
+    });
+
+    app.use((error, req, res, next) => {
+      if (res.headersSent) return next(error);
+      if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
+        return res.status(400).json({ error: { code: 'INVALID_JSON', message: 'O corpo da requisição não contém JSON válido.' } });
+      }
+      console.error(`[HTTP] ${req.method} ${req.path}:`, error);
+      return res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Não foi possível concluir a operação.' } });
+    });
+
+    server.listen(PORT, () => {
+      console.log(`[Game] Palavra de Rua e duelo legado disponíveis em http://localhost:${PORT}`);
+    });
+  })
+  .catch(error => {
+    console.error('[SoloGame] Falha ao inicializar persistência:', error);
+    process.exitCode = 1;
+  });

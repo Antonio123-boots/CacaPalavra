@@ -1,239 +1,194 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Termo Duelo — Corrida 1v1 PWA</title>
-  
-  <meta name="description" content="Jogo casual de adivinhação de palavras multiplayer em tempo real. Desafie seus amigos na Arena Cyber!">
-  <meta name="theme-color" content="#07090e">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f6f1">
+  <meta name="description" content="Uma pausa diária para descobrir palavras em português.">
+  <meta name="color-scheme" content="light">
+  <title>Palavra de Rua — desafio diário</title>
   <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2307090e'/><text x='50' y='65' font-size='50' text-anchor='middle'>⚔️</text></svg>">
-
-  <link rel="stylesheet" href="/css/cyber-theme.css">
+  <link rel="icon" href="/assets/icons/wordmark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/game.css">
+  <script type="module" src="/js/app.js"></script>
 </head>
 <body>
-
-  <div class="app-container">
-    
-    <!-- BARRA DE NAVEGAÇÃO SUPERIOR -->
-    <header class="top-nav">
-      <div class="brand-wrapper">
-        <div class="brand-badge">⚔️</div>
-        <div>
-          <h1 class="brand-title">Termo Duelo</h1>
-          <span class="brand-sub">Arena Cyber 1v1</span>
-        </div>
-      </div>
-
-      <div class="nav-actions">
-        <button class="nav-btn" id="btnToggleSound" title="Ligar/Desligar Áudio" aria-label="Alternar som">🔊</button>
-        <button class="nav-btn" id="btnToggleColorblind" title="Modo Daltônico" aria-label="Modo daltônico">👁️</button>
-        <button class="nav-btn" id="btnInstallPwa" title="Instalar Aplicativo" style="display: none;" aria-label="Instalar app">📥</button>
+  <a class="skip-link" href="#main">Pular para o conteúdo principal</a>
+  <div class="page-shell">
+    <header class="masthead">
+      <a class="brand" href="/" aria-label="Palavra de Rua, início">
+        <span class="brand-mark" aria-hidden="true">P.</span>
+        <span>
+          <span class="brand-name">palavra de rua</span>
+          <span class="brand-note">um caderno de palavras</span>
+        </span>
+      </a>
+      <div class="mast-meta"><span class="live-dot" aria-hidden="true"></span><span>uma pausa, uma palavra</span></div>
+      <div class="utility-actions">
+        <button class="quiet-button" id="contrast-toggle" type="button" aria-pressed="false">Alto contraste</button>
+        <button class="quiet-button" id="text-toggle" type="button" aria-pressed="false">Aumentar texto</button>
+        <button class="quiet-button" id="motion-toggle" type="button" aria-pressed="false">Reduzir movimento</button>
+        <button class="install-button" id="install-button" type="button" hidden>Instalar</button>
       </div>
     </header>
 
-    <!-- TELA 1: LOBBY (ENTRADA / CRIAR SALA) -->
-    <main class="view-screen lobby-screen" id="screenLobby">
-      <div class="hero-banner">
-        <h2>Corrida de Palavras 1v1</h2>
-        <p>Adivinhe a palavra secreta antes do seu adversário em tempo real.</p>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Edição de hoje <span id="date-label">carregando data…</span></p>
+        <h1 id="page-title">Uma palavra.<br><em>Seis chances.</em></h1>
+        <p>O mesmo desafio para todo mundo, uma vez por dia. Encontre a palavra escondida — sem pressa, sem spoiler.</p>
       </div>
+      <div class="word-search-stamp" aria-hidden="true">
+        <span class="stamp-letters">P A L A V R A</span>
+        <span class="stamp-line"></span>
+        <span id="challenge-number">DESAFIO DO DIA</span>
+      </div>
+    </section>
 
-      <div class="lobby-card">
-        <div class="input-group">
-          <label class="input-label" for="inputNickname">Seu Apelido</label>
-          <input type="text" id="inputNickname" class="cyber-input" placeholder="Ex: Duelista" maxlength="12" value="Duelista">
-        </div>
+    <nav class="mode-bar" aria-label="Modos de jogo">
+      <div class="mode-tabs" role="group" aria-label="Escolha um modo">
+        <button class="mode-tab is-active" id="daily-tab" type="button" aria-pressed="true">01 · Diário</button>
+        <button class="mode-tab" id="practice-tab" type="button" aria-pressed="false">02 · Prática</button>
+      </div>
+      <p class="daily-marker"><span class="marker-square" aria-hidden="true"></span><span id="mode-label">desafio de hoje</span></p>
+    </nav>
 
-        <div class="input-group">
-          <label class="input-label">Tema da Partida</label>
-          <div class="themes-grid" id="themesGrid">
-            <div class="theme-option active" data-theme="geral">
-              <span class="theme-option-icon">🧠</span>
-              <span class="theme-option-name">Geral (Clássico)</span>
+    <main class="content-grid" id="main">
+      <div class="main-column">
+        <p class="practice-note" id="practice-note" hidden>Modo prática: escolha um tema e um tamanho. Esta rodada não altera suas estatísticas nem o ranking diário.</p>
+        <section class="game-card" aria-labelledby="game-title">
+          <div class="game-heading">
+            <div>
+              <p class="section-kicker" id="game-kicker">o desafio de hoje</p>
+              <h2 id="game-title">Qual é a palavra?</h2>
+              <p class="game-description" id="game-description">Carregando o desafio diário…</p>
+              <span class="demo-badge" id="mode-badge">DESAFIO OFICIAL</span>
             </div>
-            <div class="theme-option" data-theme="cinema">
-              <span class="theme-option-icon">🎬</span>
-              <span class="theme-option-name">Cinema & Séries</span>
-            </div>
-            <div class="theme-option" data-theme="esportes">
-              <span class="theme-option-icon">⚽</span>
-              <span class="theme-option-name">Futebol & Esportes</span>
-            </div>
-            <div class="theme-option" data-theme="games">
-              <span class="theme-option-icon">🎮</span>
-              <span class="theme-option-name">Cultura Pop & Games</span>
+            <div class="attempt-count" aria-live="polite">
+              <strong id="attempts-left">—</strong>
+              <span>tentativas<br>restantes</span>
             </div>
           </div>
-        </div>
 
-        <button class="cyber-btn" id="btnCreateRoom">
-          <span>Criar Sala Privada</span>
-          <span>⚡</span>
-        </button>
+          <form class="practice-controls" id="practice-form" hidden>
+            <label for="category-select">Tema</label>
+            <select id="category-select" name="categoryId"></select>
+            <label for="length-select">Tamanho</label>
+            <select id="length-select" name="wordLength"></select>
+            <button class="small-action" type="submit">Nova prática</button>
+          </form>
 
-        <button class="cyber-btn secondary" id="btnQuickMatch">
-          <span>Partida Rápida (Aleatório)</span>
-          <span>🎲</span>
-        </button>
+          <section class="board-region" aria-label="Tabuleiro da partida">
+            <ol class="board" id="board" aria-label="Seis tentativas disponíveis"></ol>
+            <div class="board-caption">
+              <span id="board-caption-left">carregando partida…</span>
+              <span id="board-caption-right"></span>
+            </div>
+          </section>
 
-        <div class="divider-text">ou entrar com código</div>
+          <div class="legend" aria-label="Legenda das pistas">
+            <span><i class="legend-correct" aria-hidden="true">✓</i> posição certa</span>
+            <span><i class="legend-present" aria-hidden="true">↗</i> existe, outra posição</span>
+            <span><i class="legend-absent" aria-hidden="true">×</i> não aparece</span>
+          </div>
 
-        <div class="join-inline-form">
-          <input type="text" id="inputRoomCode" class="cyber-input" placeholder="Código (ex: ABC123)" maxlength="6" style="text-transform: uppercase;">
-          <button class="cyber-btn secondary" id="btnJoinRoom">Entrar</button>
-        </div>
+          <div class="keyboard" id="keyboard" aria-label="Teclado virtual"></div>
+          <label class="sr-only" for="guess-input">Seu palpite, uma palavra com o tamanho indicado</label>
+          <input class="guess-entry" id="guess-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="7" placeholder="Digite seu palpite" aria-describedby="keyboard-help">
+          <div class="game-controls">
+            <button class="primary-button" id="submit-guess" type="button">Enviar palpite <span aria-hidden="true">↗</span></button>
+            <button class="secondary-button" id="clear-guess" type="button">Apagar</button>
+          </div>
+          <p class="keyboard-help" id="keyboard-help">Use o teclado na tela ou o físico · Enter envia · Backspace apaga</p>
+          <p class="status-message" id="game-status" role="status" aria-live="polite">Carregando…</p>
+          <button class="text-action retry-button" id="retry-button" type="button" hidden>Recarregar jogo</button>
+          <div class="result-panel" id="result-panel" hidden aria-live="polite">
+            <p class="section-kicker" id="result-kicker">resultado do desafio</p>
+            <h3 id="result-title"></h3>
+            <p id="result-copy"></p>
+            <div class="result-actions">
+              <button class="primary-button" id="share-result" type="button" disabled>Compartilhar resultado</button>
+            </div>
+            <label class="share-label" for="share-text">Texto sem spoiler</label>
+            <textarea id="share-text" rows="4" readonly></textarea>
+          </div>
+        </section>
+
+        <section class="how-card" aria-labelledby="how-title">
+          <div class="how-icon" aria-hidden="true">⌕</div>
+          <div>
+            <p class="section-kicker">como jogar</p>
+            <h2 id="how-title">Siga as pistas, letra por letra.</h2>
+            <p>Descubra a palavra em até seis tentativas. Verde indica o lugar certo; amarelo, outra posição; cinza, uma letra que não aparece. As pistas também usam símbolos.</p>
+          </div>
+          <div class="mini-word" aria-label="Exemplo decorativo da palavra LUZ">
+            <span>L</span><span>U</span><span>Z</span>
+          </div>
+        </section>
       </div>
+
+      <aside class="side-column" aria-label="Seu caderno e ranking">
+        <section class="side-card" aria-labelledby="profile-title">
+          <div class="side-heading">
+            <h2 id="profile-title">Seu perfil</h2>
+            <span class="side-label">opcional</span>
+          </div>
+          <p class="side-copy">Jogue sem cadastro. Escolha um apelido para aparecer no ranking.</p>
+          <form class="profile-form" id="profile-form">
+            <label for="nickname">Apelido público</label>
+            <div class="profile-input-row">
+              <input id="nickname" name="nickname" maxlength="20" autocomplete="nickname" placeholder="Seu apelido">
+              <button class="small-action" type="submit">Salvar</button>
+            </div>
+            <p class="privacy-note">Seu apelido aparece no ranking. Não informe seu nome completo.</p>
+          </form>
+          <button class="text-action" id="delete-profile" type="button">Apagar perfil e histórico</button>
+        </section>
+
+        <section class="side-card" aria-labelledby="stats-title">
+          <div class="side-heading">
+            <h2 id="stats-title">Seu caderno</h2>
+            <span class="side-label">desafios diários</span>
+          </div>
+          <div class="stat-grid" id="stats-grid" aria-live="polite">
+            <div class="stat"><strong id="stat-played">—</strong><span>jogados</span></div>
+            <div class="stat"><strong id="stat-win-rate">—</strong><span>vitórias</span></div>
+            <div class="stat"><strong id="stat-streak">—</strong><span>sequência atual</span></div>
+            <div class="stat"><strong id="stat-best-streak">—</strong><span>melhor sequência</span></div>
+          </div>
+          <div class="distribution">
+            <h3>Tentativas até acertar</h3>
+            <div id="distribution"></div>
+          </div>
+          <p class="privacy-note">As estatísticas ficam associadas ao perfil deste dispositivo.</p>
+        </section>
+
+        <section class="side-card" aria-labelledby="ranking-title">
+          <div class="side-heading">
+            <h2 id="ranking-title">Na mesma página</h2>
+            <span class="side-label" id="ranking-date"></span>
+          </div>
+          <p class="side-copy">Quem resolveu em menos tentativas aparece primeiro. Empates dividem a posição.</p>
+          <ol class="rank-list" id="ranking-list" aria-live="polite">
+            <li class="empty-state">Carregando ranking…</li>
+          </ol>
+          <p class="privacy-note">Só aparecem aqui perfis com apelido público.</p>
+        </section>
+
+        <section class="side-card install-card">
+          <span class="install-mark" aria-hidden="true">▦</span>
+          <h2>Leve o desafio com você.</h2>
+          <p>Instale como app para abrir o jogo com um toque. A partida diária precisa de conexão para ser confirmada.</p>
+          <button class="secondary-button" id="install-card-button" type="button" hidden>Instalar no dispositivo</button>
+        </section>
+      </aside>
     </main>
 
-    <!-- TELA 2: LOBBY DA SALA (ESPERANDO E CONFIRMAÇÃO DE PRONTIDÃO) -->
-    <section class="view-screen waiting-screen hidden" id="screenWaiting">
-      <div class="hero-banner">
-        <h2>Lobby do Duelo</h2>
-        <p id="waitingSubTitle">Compartilhe o código ou o link com seu adversário:</p>
-      </div>
-
-      <div class="room-code-box">
-        <span class="input-label">Código da Sala</span>
-        <div class="room-code-val" id="displayRoomCode">------</div>
-      </div>
-
-      <!-- CARDS DOS DOIS DUELISTAS NA SALA -->
-      <div class="lobby-duelists-grid" id="lobbyDuelistsGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 400px;">
-        <div class="duel-player-card" id="cardPlayer1" style="background: var(--cyber-surface); border: 1px solid var(--cyber-border); border-radius: var(--radius-sm); padding: 12px 8px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px;">
-          <div class="avatar-circle" style="width: 40px; height: 40px; font-size: 1.3rem;">😎</div>
-          <span class="p-nick" id="lobbyNick1" style="font-size: 0.85rem;">Jogador 1</span>
-          <span class="badge-status" id="lobbyStatus1" style="font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.08); color: var(--text-dim);">Aguardando...</span>
-        </div>
-
-        <div class="duel-player-card" id="cardPlayer2" style="background: var(--cyber-surface); border: 1px solid var(--cyber-border); border-radius: var(--radius-sm); padding: 12px 8px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px;">
-          <div class="avatar-circle opp-circ" style="width: 40px; height: 40px; font-size: 1.3rem;">🤖</div>
-          <span class="p-nick" id="lobbyNick2" style="font-size: 0.85rem;">Esperando oponente</span>
-          <span class="badge-status" id="lobbyStatus2" style="font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.08); color: var(--text-dim);">Entrando...</span>
-        </div>
-      </div>
-
-      <!-- BOTÃO ESTOU PRONTO (SÓ ATIVADO QUANDO HÁ 2 JOGADORES) -->
-      <button class="cyber-btn" id="btnToggleReady" style="width: 100%; max-width: 400px; display: none;">
-        <span id="readyBtnLabel">ESTOU PRONTO! ⚔️</span>
-      </button>
-
-      <button class="cyber-btn" id="btnCopyInviteLink" style="width: 100%; max-width: 400px;">
-        <span>Copiar Link de Convite</span>
-        <span>📋</span>
-      </button>
-
-      <button class="cyber-btn secondary" id="btnCancelWaiting" style="width: 100%; max-width: 400px;">
-        <span>Sair da Sala</span>
-      </button>
-
-      <div class="input-label" id="lobbyHelperText" style="animation: pulse-countdown 1.5s infinite; text-align: center;">
-        Aguardando oponente entrar na arena...
-      </div>
-    </section>
-
-    <!-- TELA 3: ARENA DE DUELO 1v1 -->
-    <section class="view-screen arena-screen hidden" id="screenArena">
-      <!-- CABEÇALHO DA ARENA -->
-      <div class="duel-header">
-        <div class="duel-meta-bar">
-          <span class="category-tag" id="arenaCategoryTag">🧠 Geral</span>
-          <span class="round-clock" id="arenaRoundClock">⏱️ 00:00</span>
-          <button class="nav-btn" id="btnLeaveArena" title="Abandonar partida" style="width: 28px; height: 28px; font-size: 0.75rem;">✕</button>
-        </div>
-
-        <!-- PLACAR DE DUELO VS -->
-        <div class="duel-vs-bar">
-          <div class="player-info">
-            <div class="avatar-circle">😎</div>
-            <div class="player-names">
-              <span class="p-nick" id="playerLocalNick">Você</span>
-              <span class="p-state" id="playerLocalState">Linha 1/6</span>
-            </div>
-          </div>
-
-          <div class="vs-block">
-            <span class="vs-tag">VS</span>
-          </div>
-
-          <div class="player-info opponent">
-            <div class="avatar-circle opp-circ">
-              🤖
-              <span class="typing-pulse" id="oppTypingPulse"></span>
-            </div>
-            <div class="player-names" style="text-align: right;">
-              <span class="p-nick" id="playerOppNick">Oponente</span>
-              <span class="p-state" id="playerOppState">Aguardando...</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- MINI-GRID DO OPONENTE REALTIME (ANTI-SPOILER) -->
-        <div class="opponent-mini-tracker">
-          <div class="tracker-title-row">
-            <span>Progresso do Oponente em Tempo Real</span>
-            <span style="font-style: italic;">(letras ocultas)</span>
-          </div>
-          <div class="mini-grid-container" id="oppMiniGridContainer">
-            <!-- 6 linhas x 5 mini blocos gerados via JS -->
-          </div>
-        </div>
-      </div>
-
-      <!-- TABULEIRO DO JOGADOR LOCAL (6x5) -->
-      <div class="board-section">
-        <div class="board-grid" id="playerBoardGrid">
-          <!-- 6 linhas x 5 tiles gerados via JS -->
-        </div>
-      </div>
-
-      <!-- TECLADO VIRTUAL QWERTY PT-BR -->
-      <div class="keyboard-section">
-        <div class="cyber-keyboard" id="cyberKeyboard">
-          <!-- Linhas de teclas geradas via JS -->
-        </div>
-      </div>
-    </section>
-
+    <footer class="footer">
+      <span>Uma pausa, uma palavra.</span>
+      <span>Jogo gratuito · sem anúncios</span>
+    </footer>
   </div>
-
-  <!-- CONTAGEM REGRESSIVA OVERLAY (3, 2, 1) -->
-  <div class="countdown-overlay hidden" id="countdownOverlay">
-    <div class="input-label" style="font-size: 1.1rem; color: #fff;">A CORRIDA VAI COMEÇAR!</div>
-    <div class="countdown-number" id="countdownNumber">3</div>
-    <div style="color: var(--accent-cyan); font-weight: 700;">Prepare-se para digitar!</div>
-  </div>
-
-  <!-- MODAL DE FIM DE PARTIDA (VITÓRIA / DERROTA) -->
-  <div class="modal-backdrop hidden" id="gameOverModal">
-    <div class="game-over-modal">
-      <div class="result-icon" id="modalResultIcon">🏆</div>
-      <h2 class="result-title" id="modalResultTitle">VITÓRIA!</h2>
-      <p id="modalResultDesc">Você foi o primeiro a decifrar a palavra secreta!</p>
-
-      <div class="secret-word-reveal">
-        <div class="input-label">Palavra Secreta</div>
-        <div class="secret-word-val" id="modalSecretWord">TERMO</div>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 8px;">
-        <button class="cyber-btn" id="btnRequestRematch">
-          <span id="rematchBtnText">Pedir Revanche</span>
-          <span>🔄</span>
-        </button>
-        <button class="cyber-btn secondary" id="btnBackToLobby">
-          <span>Voltar ao Lobby</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOAST FLUTUANTE -->
-  <div class="toast-msg" id="toastMsg">Mensagem do sistema</div>
-
-  <!-- SCRIPTS -->
-  <script src="/socket.io/socket.io.js"></script>
-  <script type="module" src="/js/app.js"></script>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

@@ -1,774 +1,801 @@
-/**
- * TERMO DUELO - CLIENTE PRINCIPAL (ARENA CYBER 1v1 PWA)
- */
-import { CyberAudioEngine } from './audioSynth.js';
+const MAX_ATTEMPTS = 6;
+const PRACTICE_STORAGE_KEY = 'palavra-practice-session';
+const PREFERENCES_KEY = 'palavra-preferences';
 
-// INICIALIZAÇÃO DE SERVIÇOS
-const audio = new CyberAudioEngine();
-const socket = io();
-
-// ESTADO DO CLIENTE
-const STATE = {
-  nickname: 'Duelista',
-  selectedTheme: 'geral',
-  currentRoomCode: null,
-  isHost: false,
-  opponentNickname: 'Oponente',
-  currentRow: 0,
-  currentCol: 0,
+const state = {
+  mode: 'daily',
+  profile: null,
+  categories: [],
+  daily: null,
+  practice: null,
   currentGuess: '',
-  isLocked: true, // Bloqueado até o countdown terminar
-  isGameOver: false,
-  timerInterval: null,
-  timerSeconds: 0,
-  typingTimeout: null,
-  colorblindMode: false
+  pendingRequest: null,
+  submitting: false,
+  installPrompt: null,
+  toastTimeout: null
 };
 
-const MAX_ROWS = 6;
-const WORD_LENGTH = 5;
+const elements = {
+  date: document.getElementById('date-label'),
+  challengeNumber: document.getElementById('challenge-number'),
+  modeLabel: document.getElementById('mode-label'),
+  dailyTab: document.getElementById('daily-tab'),
+  practiceTab: document.getElementById('practice-tab'),
+  practiceNote: document.getElementById('practice-note'),
+  practiceForm: document.getElementById('practice-form'),
+  categorySelect: document.getElementById('category-select'),
+  lengthSelect: document.getElementById('length-select'),
+  gameKicker: document.getElementById('game-kicker'),
+  gameTitle: document.getElementById('game-title'),
+  gameDescription: document.getElementById('game-description'),
+  modeBadge: document.getElementById('mode-badge'),
+  attemptsLeft: document.getElementById('attempts-left'),
+  board: document.getElementById('board'),
+  boardCaptionLeft: document.getElementById('board-caption-left'),
+  boardCaptionRight: document.getElementById('board-caption-right'),
+  keyboard: document.getElementById('keyboard'),
+  guessInput: document.getElementById('guess-input'),
+  submitGuess: document.getElementById('submit-guess'),
+  clearGuess: document.getElementById('clear-guess'),
+  gameStatus: document.getElementById('game-status'),
+  retryButton: document.getElementById('retry-button'),
+  resultPanel: document.getElementById('result-panel'),
+  resultTitle: document.getElementById('result-title'),
+  resultCopy: document.getElementById('result-copy'),
+  resultKicker: document.getElementById('result-kicker'),
+  shareButton: document.getElementById('share-result'),
+  shareText: document.getElementById('share-text'),
+  profileForm: document.getElementById('profile-form'),
+  nickname: document.getElementById('nickname'),
+  deleteProfile: document.getElementById('delete-profile'),
+  played: document.getElementById('stat-played'),
+  winRate: document.getElementById('stat-win-rate'),
+  streak: document.getElementById('stat-streak'),
+  bestStreak: document.getElementById('stat-best-streak'),
+  distribution: document.getElementById('distribution'),
+  rankingDate: document.getElementById('ranking-date'),
+  rankingList: document.getElementById('ranking-list'),
+  toast: document.getElementById('toast'),
+  contrastToggle: document.getElementById('contrast-toggle'),
+  textToggle: document.getElementById('text-toggle'),
+  motionToggle: document.getElementById('motion-toggle'),
+  installButton: document.getElementById('install-button'),
+  installCardButton: document.getElementById('install-card-button')
+};
 
-const KEYBOARD_LAYOUT = [
+const keyboardLayout = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
   ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ç'],
   ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'DEL']
 ];
 
-// ELEMENTOS DOM
-const DOM = {
-  // Telas
-  screenLobby: document.getElementById('screenLobby'),
-  screenWaiting: document.getElementById('screenWaiting'),
-  screenArena: document.getElementById('screenArena'),
-  countdownOverlay: document.getElementById('countdownOverlay'),
-  countdownNumber: document.getElementById('countdownNumber'),
-  gameOverModal: document.getElementById('gameOverModal'),
-  toastMsg: document.getElementById('toastMsg'),
-
-  // Lobby
-  inputNickname: document.getElementById('inputNickname'),
-  themesGrid: document.getElementById('themesGrid'),
-  btnCreateRoom: document.getElementById('btnCreateRoom'),
-  btnQuickMatch: document.getElementById('btnQuickMatch'),
-  inputRoomCode: document.getElementById('inputRoomCode'),
-  btnJoinRoom: document.getElementById('btnJoinRoom'),
-
-  // Aguardo / Lobby da Sala
-  displayRoomCode: document.getElementById('displayRoomCode'),
-  btnCopyInviteLink: document.getElementById('btnCopyInviteLink'),
-  btnCancelWaiting: document.getElementById('btnCancelWaiting'),
-  lobbyDuelistsGrid: document.getElementById('lobbyDuelistsGrid'),
-  cardPlayer1: document.getElementById('cardPlayer1'),
-  cardPlayer2: document.getElementById('cardPlayer2'),
-  lobbyNick1: document.getElementById('lobbyNick1'),
-  lobbyStatus1: document.getElementById('lobbyStatus1'),
-  lobbyNick2: document.getElementById('lobbyNick2'),
-  lobbyStatus2: document.getElementById('lobbyStatus2'),
-  btnToggleReady: document.getElementById('btnToggleReady'),
-  readyBtnLabel: document.getElementById('readyBtnLabel'),
-  lobbyHelperText: document.getElementById('lobbyHelperText'),
-  waitingSubTitle: document.getElementById('waitingSubTitle'),
-
-  // Arena
-  arenaCategoryTag: document.getElementById('arenaCategoryTag'),
-  arenaRoundClock: document.getElementById('arenaRoundClock'),
-  btnLeaveArena: document.getElementById('btnLeaveArena'),
-  playerLocalNick: document.getElementById('playerLocalNick'),
-  playerLocalState: document.getElementById('playerLocalState'),
-  playerOppNick: document.getElementById('playerOppNick'),
-  playerOppState: document.getElementById('playerOppState'),
-  oppTypingPulse: document.getElementById('oppTypingPulse'),
-  oppMiniGridContainer: document.getElementById('oppMiniGridContainer'),
-  playerBoardGrid: document.getElementById('playerBoardGrid'),
-  cyberKeyboard: document.getElementById('cyberKeyboard'),
-
-  // Modal Game Over
-  modalResultIcon: document.getElementById('modalResultIcon'),
-  modalResultTitle: document.getElementById('modalResultTitle'),
-  modalResultDesc: document.getElementById('modalResultDesc'),
-  modalSecretWord: document.getElementById('modalSecretWord'),
-  btnRequestRematch: document.getElementById('btnRequestRematch'),
-  rematchBtnText: document.getElementById('rematchBtnText'),
-  btnBackToLobby: document.getElementById('btnBackToLobby'),
-
-  // Controles
-  btnToggleSound: document.getElementById('btnToggleSound'),
-  btnToggleColorblind: document.getElementById('btnToggleColorblind'),
-  btnInstallPwa: document.getElementById('btnInstallPwa')
-};
-
-// ==========================================================================
-// INICIALIZAÇÃO
-// ==========================================================================
-function init() {
-  setupPWA();
-  setupUIEvents();
-  setupSocketListeners();
-  checkUrlParamsForInvite();
-  renderKeyboard();
-  renderBoard();
-  renderOpponentGrid();
+class ApiError extends Error {
+  constructor(status, code, message) {
+    super(message);
+    this.status = status;
+    this.code = code;
+  }
 }
 
-// ==========================================================================
-// GESTÃO DE TELAS
-// ==========================================================================
-function showScreen(screen) {
-  DOM.screenLobby.classList.add('hidden');
-  DOM.screenWaiting.classList.add('hidden');
-  DOM.screenArena.classList.add('hidden');
-  screen.classList.remove('hidden');
-}
-
-function showToast(message, duration = 2400) {
-  DOM.toastMsg.textContent = message;
-  DOM.toastMsg.classList.add('show');
-  setTimeout(() => DOM.toastMsg.classList.remove('show'), duration);
-}
-
-// ==========================================================================
-// EVENTOS DE INTERFACE DO LOBBY
-// ==========================================================================
-function setupUIEvents() {
-  // Seleção de Tema
-  DOM.themesGrid.addEventListener('click', (e) => {
-    const option = e.target.closest('.theme-option');
-    if (!option) return;
-    document.querySelectorAll('.theme-option').forEach(el => el.classList.remove('active'));
-    option.classList.add('active');
-    STATE.selectedTheme = option.dataset.theme;
-    audio.playKey();
-  });
-
-  // Criar Sala
-  DOM.btnCreateRoom.addEventListener('click', () => {
-    STATE.nickname = DOM.inputNickname.value.trim() || 'Duelista';
-    audio.playKey();
-    socket.emit('create-room', {
-      nickname: STATE.nickname,
-      theme: STATE.selectedTheme
-    });
-  });
-
-  // Partida Rápida
-  DOM.btnQuickMatch.addEventListener('click', () => {
-    STATE.nickname = DOM.inputNickname.value.trim() || 'Duelista';
-    audio.playKey();
-    showToast('Buscando oponente na Arena...');
-    socket.emit('quick-match', {
-      nickname: STATE.nickname,
-      theme: STATE.selectedTheme
-    });
-  });
-
-  // Entrar com Código
-  DOM.btnJoinRoom.addEventListener('click', () => {
-    const code = DOM.inputRoomCode.value.trim().toUpperCase();
-    if (!code || code.length !== 6) {
-      showToast('Digite um código válido de 6 caracteres.');
-      audio.playError();
-      return;
-    }
-    STATE.nickname = DOM.inputNickname.value.trim() || 'Duelista';
-    audio.playKey();
-    socket.emit('join-room', { code, nickname: STATE.nickname });
-  });
-
-  // Copiar Link de Convite
-  DOM.btnCopyInviteLink.addEventListener('click', () => {
-    const inviteUrl = `${window.location.origin}/?sala=${STATE.currentRoomCode}`;
-    navigator.clipboard.writeText(inviteUrl).then(() => {
-      showToast('📋 Link copiado! Envie no WhatsApp ou Discord!');
-      audio.playKey();
-    }).catch(() => {
-      showToast(`Código: ${STATE.currentRoomCode}`);
-    });
-  });
-
-  // Botão Estou Pronto no Lobby
-  DOM.btnToggleReady.addEventListener('click', () => {
-    STATE.isReady = !STATE.isReady;
-    audio.playKey();
-    if (STATE.isReady) {
-      DOM.readyBtnLabel.textContent = 'VOCÊ ESTÁ PRONTO! ⏳';
-      DOM.btnToggleReady.style.background = 'var(--cyber-correct)';
-      DOM.btnToggleReady.style.color = '#000';
-    } else {
-      DOM.readyBtnLabel.textContent = 'ESTOU PRONTO! ⚔️';
-      DOM.btnToggleReady.style.background = 'var(--accent-gradient)';
-      DOM.btnToggleReady.style.color = '#fff';
-    }
-    socket.emit('player-ready', { isReady: STATE.isReady });
-  });
-
-  // Cancelar Aguardo
-  DOM.btnCancelWaiting.addEventListener('click', () => {
-    showScreen(DOM.screenLobby);
-    window.location.reload();
-  });
-
-  // Sair da Arena
-  DOM.btnLeaveArena.addEventListener('click', () => {
-    if (confirm('Deseja realmente abandonar a corrida? Você perderá a partida por W.O.')) {
-      window.location.reload();
-    }
-  });
-
-  // Pedir Revanche
-  DOM.btnRequestRematch.addEventListener('click', () => {
-    audio.playKey();
-    socket.emit('request-rematch');
-  });
-
-  // Voltar ao Lobby
-  DOM.btnBackToLobby.addEventListener('click', () => {
-    DOM.gameOverModal.classList.add('hidden');
-    showScreen(DOM.screenLobby);
-  });
-
-  // Alternar Som
-  DOM.btnToggleSound.addEventListener('click', () => {
-    audio.isMuted = !audio.isMuted;
-    DOM.btnToggleSound.textContent = audio.isMuted ? '🔇' : '🔊';
-    showToast(audio.isMuted ? 'Áudio desativado' : 'Áudio ativado');
-  });
-
-  // Alternar Modo Daltônico
-  DOM.btnToggleColorblind.addEventListener('click', () => {
-    document.body.classList.toggle('colorblind-mode');
-    STATE.colorblindMode = document.body.classList.contains('colorblind-mode');
-    DOM.btnToggleColorblind.classList.toggle('active', STATE.colorblindMode);
-    showToast(STATE.colorblindMode ? 'Modo Daltônico ativado (Símbolos visíveis)' : 'Modo Daltônico desativado');
-  });
-
-  // Digitação pelo Teclado Físico
-  window.addEventListener('keydown', (e) => {
-    if (DOM.screenArena.classList.contains('hidden') || STATE.isLocked || STATE.isGameOver) {
-      return;
-    }
-
-    if (e.key === 'Enter') {
-      handleVirtualKey('ENTER');
-    } else if (e.key === 'Backspace') {
-      handleVirtualKey('DEL');
-    } else {
-      const char = e.key.toUpperCase();
-      if (/^[A-ZÇ]$/.test(char)) {
-        handleVirtualKey(char);
+async function api(path, options = {}) {
+  let response;
+  try {
+    response = await fetch(path, {
+      ...options,
+      credentials: 'same-origin',
+      headers: {
+        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        ...options.headers
       }
-    }
-  });
+    });
+  } catch {
+    throw new ApiError(0, 'NETWORK_ERROR', 'Sem conexão com o servidor. Verifique sua internet e tente novamente.');
+  }
+
+  if (response.status === 204) return null;
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new ApiError(response.status, 'INVALID_RESPONSE', 'O servidor enviou uma resposta que não pôde ser lida.');
+  }
+  if (!response.ok) {
+    throw new ApiError(response.status, data.error?.code || 'REQUEST_FAILED',
+      data.error?.message || 'Não foi possível concluir a operação.');
+  }
+  return data;
 }
 
-// Checar se abriu a página via link direto ?sala=XYZ123
-function checkUrlParamsForInvite() {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('sala');
-  if (code && code.length === 6) {
-    DOM.inputRoomCode.value = code.toUpperCase();
-    showToast(`Código ${code.toUpperCase()} inserido do link de convite!`);
+function uuid() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = [...bytes].map(value => value.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+function normalize(value) {
+  return value.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase().trim();
+}
+
+function activeGame() {
+  return state.mode === 'daily' ? state.daily : state.practice;
+}
+
+function wordLength() {
+  const game = activeGame();
+  return game ? game.wordLength : 5;
+}
+
+function displayDate(date) {
+  const parsed = new Date(`${date}T12:00:00Z`);
+  return parsed.toLocaleDateString('pt-BR', { timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function setStatus(message, kind = '') {
+  elements.gameStatus.textContent = message;
+  elements.gameStatus.classList.toggle('is-error', kind === 'error');
+  elements.gameStatus.classList.toggle('is-success', kind === 'success');
+}
+
+function showToast(message) {
+  elements.toast.textContent = message;
+  elements.toast.classList.add('is-visible');
+  clearTimeout(state.toastTimeout);
+  state.toastTimeout = setTimeout(() => elements.toast.classList.remove('is-visible'), 3000);
+}
+
+function safeLocalStorage() {
+  try {
+    return window.localStorage;
+  } catch (error) {
+    console.warn('[UI] Preferências locais indisponíveis:', error);
+    return null;
   }
 }
 
-// ==========================================================================
-// RENDERIZAÇÃO DE COMPONENTES DA ARENA
-// ==========================================================================
-function renderBoard() {
-  DOM.playerBoardGrid.innerHTML = '';
-  for (let r = 0; r < MAX_ROWS; r++) {
-    const rowEl = document.createElement('div');
-    rowEl.className = 'board-row';
-    rowEl.dataset.row = r;
-
-    for (let c = 0; c < WORD_LENGTH; c++) {
-      const tile = document.createElement('div');
-      tile.className = 'board-tile';
-      tile.id = `tile-${r}-${c}`;
-
-      const symbol = document.createElement('span');
-      symbol.className = 'cb-symbol';
-      tile.appendChild(symbol);
-
-      rowEl.appendChild(tile);
-    }
-    DOM.playerBoardGrid.appendChild(rowEl);
+function readPreferences() {
+  const storage = safeLocalStorage();
+  if (!storage) return {};
+  try {
+    return JSON.parse(storage.getItem(PREFERENCES_KEY) || '{}');
+  } catch (error) {
+    console.warn('[UI] Preferências salvas inválidas:', error);
+    return {};
   }
 }
 
-function renderOpponentGrid() {
-  DOM.oppMiniGridContainer.innerHTML = '';
-  for (let r = 0; r < MAX_ROWS; r++) {
-    const rowEl = document.createElement('div');
-    rowEl.className = 'mini-row';
-
-    for (let c = 0; c < WORD_LENGTH; c++) {
-      const cell = document.createElement('div');
-      cell.className = 'mini-cell';
-      cell.id = `opp-cell-${r}-${c}`;
-      rowEl.appendChild(cell);
-    }
-    DOM.oppMiniGridContainer.appendChild(rowEl);
+function savePreferences(preferences) {
+  const storage = safeLocalStorage();
+  if (!storage) {
+    showToast('Não foi possível salvar a preferência neste dispositivo.');
+    return;
   }
+  try {
+    storage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+  } catch (error) {
+    console.warn('[UI] Não foi possível salvar preferências:', error);
+    showToast('Não foi possível salvar a preferência neste dispositivo.');
+  }
+}
+
+function practiceStorage() {
+  try {
+    return window.sessionStorage;
+  } catch (error) {
+    console.warn('[UI] Sessão local de prática indisponível:', error);
+    return null;
+  }
+}
+
+function setPracticeId(id) {
+  const storage = practiceStorage();
+  if (!storage) return;
+  try {
+    if (id) storage.setItem(PRACTICE_STORAGE_KEY, id);
+    else storage.removeItem(PRACTICE_STORAGE_KEY);
+  } catch (error) {
+    console.warn('[UI] Não foi possível salvar a sessão de prática:', error);
+    showToast('A sessão de prática pode não ser restaurada ao recarregar a página.');
+  }
+}
+
+function getPracticeId() {
+  const storage = practiceStorage();
+  if (!storage) return null;
+  try {
+    return storage.getItem(PRACTICE_STORAGE_KEY);
+  } catch (error) {
+    console.warn('[UI] Não foi possível recuperar a sessão de prática:', error);
+    return null;
+  }
+}
+
+function applyPreferences() {
+  const preferences = readPreferences();
+  document.body.classList.toggle('high-contrast', Boolean(preferences.highContrast));
+  document.body.classList.toggle('large-text', Boolean(preferences.largeText));
+  document.body.classList.toggle('reduced-motion', Boolean(preferences.reducedMotion));
+  elements.contrastToggle.setAttribute('aria-pressed', String(Boolean(preferences.highContrast)));
+  elements.textToggle.setAttribute('aria-pressed', String(Boolean(preferences.largeText)));
+  elements.motionToggle.setAttribute('aria-pressed', String(Boolean(preferences.reducedMotion)));
+}
+
+function categoryById(id) {
+  return state.categories.find(category => category.id === id);
+}
+
+function updateLengthsForCategory(preferredLength) {
+  const category = categoryById(elements.categorySelect.value) || state.categories[0];
+  if (!category) return;
+  const lengths = category.lengths;
+  elements.lengthSelect.replaceChildren();
+  for (const length of lengths) {
+    const option = document.createElement('option');
+    option.value = String(length);
+    option.textContent = `${length} letras`;
+    elements.lengthSelect.append(option);
+  }
+  if (lengths.includes(Number(preferredLength))) {
+    elements.lengthSelect.value = String(preferredLength);
+  }
+}
+
+function renderCategories() {
+  elements.categorySelect.replaceChildren();
+  for (const category of state.categories) {
+    const option = document.createElement('option');
+    option.value = category.id;
+    option.textContent = category.name;
+    elements.categorySelect.append(option);
+  }
+  updateLengthsForCategory(5);
+}
+
+function statusSymbol(status) {
+  return status === 'correct' ? '✓' : status === 'present' ? '↗' : '×';
+}
+
+function describeStatus(status) {
+  if (status === 'correct') return 'letra certa no lugar';
+  if (status === 'present') return 'letra existe em outra posição';
+  return 'letra não aparece';
+}
+
+function keyboardStates() {
+  const rank = { absent: 1, present: 2, correct: 3 };
+  const result = {};
+  for (const guess of activeGame()?.guesses || []) {
+    guess.guess.split('').forEach((letter, index) => {
+      const status = guess.result[index];
+      if (!result[letter] || rank[status] > rank[result[letter]]) result[letter] = status;
+    });
+  }
+  return result;
 }
 
 function renderKeyboard() {
-  DOM.cyberKeyboard.innerHTML = '';
-  KEYBOARD_LAYOUT.forEach(row => {
-    const rowEl = document.createElement('div');
-    rowEl.className = 'k-row';
+  const game = activeGame();
+  const isLocked = !game || ['won', 'lost'].includes(game.status) || state.submitting;
+  const states = keyboardStates();
+  elements.keyboard.replaceChildren();
+  for (const rowKeys of keyboardLayout) {
+    const row = document.createElement('div');
+    row.className = 'key-row';
+    for (const key of rowKeys) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `key${key === 'ENTER' || key === 'DEL' ? ' wide' : ''}`;
+      button.textContent = key === 'ENTER' ? 'Enviar' : key === 'DEL' ? '⌫' : key;
+      button.disabled = isLocked;
+      if (key === 'ENTER') button.setAttribute('aria-label', 'Enviar palpite');
+      else if (key === 'DEL') button.setAttribute('aria-label', 'Apagar última letra');
+      else if (states[key]) button.classList.add(states[key]);
+      button.addEventListener('click', () => {
+        if (key === 'ENTER') submitGuess();
+        else if (key === 'DEL') editGuess('delete');
+        else editGuess(key);
+      });
+      row.append(button);
+    }
+    elements.keyboard.append(row);
+  }
+}
 
-    row.forEach(key => {
-      const btn = document.createElement('button');
-      btn.className = 'k-key';
-      btn.textContent = key;
-      btn.id = `k-btn-${key}`;
+function renderBoard() {
+  const game = activeGame();
+  const length = wordLength();
+  const guesses = game?.guesses || [];
+  const terminal = game && ['won', 'lost'].includes(game.status);
+  elements.board.replaceChildren();
+  elements.board.style.setProperty('--word-length', String(length));
+  elements.board.setAttribute('aria-colcount', String(length));
 
-      if (key === 'ENTER' || key === 'DEL') {
-        btn.classList.add('action-key');
+  for (let rowIndex = 0; rowIndex < MAX_ATTEMPTS; rowIndex += 1) {
+    const savedGuess = guesses[rowIndex];
+    const isCurrent = !savedGuess && !terminal && rowIndex === guesses.length;
+    const row = document.createElement('li');
+    row.className = 'board-row';
+    row.setAttribute('role', 'row');
+    row.setAttribute('aria-rowindex', String(rowIndex + 1));
+    row.style.setProperty('--word-length', String(length));
+    row.setAttribute('aria-label', `Tentativa ${rowIndex + 1}${savedGuess ? '' : isCurrent ? ', atual' : ', vazia'}`);
+
+    for (let column = 0; column < length; column += 1) {
+      const tile = document.createElement('span');
+      tile.className = 'tile';
+      tile.setAttribute('role', 'gridcell');
+      const letter = savedGuess?.guess[column] || (isCurrent ? state.currentGuess[column] : '') || '';
+      if (letter) {
+        tile.textContent = letter;
+        tile.classList.add('filled');
       }
+      if (savedGuess) {
+        const status = savedGuess.result[column];
+        tile.classList.add(status);
+        tile.setAttribute('aria-label', `${column + 1}: ${letter}, ${describeStatus(status)}`);
+        const symbol = document.createElement('span');
+        symbol.className = 'tile-symbol';
+        symbol.setAttribute('aria-hidden', 'true');
+        symbol.textContent = statusSymbol(status);
+        tile.append(symbol);
+      } else {
+        tile.setAttribute('aria-label', letter ? `${column + 1}: ${letter}` : `${column + 1}: vazia`);
+      }
+      row.append(tile);
+    }
+    elements.board.append(row);
+  }
+  elements.board.setAttribute('role', 'grid');
+  elements.board.setAttribute('aria-rowcount', String(MAX_ATTEMPTS));
 
-      btn.addEventListener('click', () => handleVirtualKey(key));
-      rowEl.appendChild(btn);
-    });
+  elements.attemptsLeft.textContent = game ? String(Math.max(0, MAX_ATTEMPTS - guesses.length)) : '6';
+  elements.guessInput.maxLength = length;
+  elements.guessInput.value = state.currentGuess;
+  elements.guessInput.disabled = Boolean(terminal || !game || state.submitting);
+  elements.submitGuess.disabled = Boolean(terminal || !game || state.submitting);
+  elements.clearGuess.disabled = Boolean(terminal || !game || state.submitting || !state.currentGuess);
+  elements.boardCaptionLeft.textContent = terminal
+    ? 'partida encerrada'
+    : `palpite ${String(guesses.length + 1).padStart(2, '0')} de ${MAX_ATTEMPTS}`;
+  elements.boardCaptionRight.textContent = `${String(Math.max(0, MAX_ATTEMPTS - guesses.length)).padStart(2, '0')} restantes`;
 
-    DOM.cyberKeyboard.appendChild(rowEl);
-  });
+  renderKeyboard();
+  renderResult();
 }
 
-// ==========================================================================
-// TRATAMENTO DA DIGITAÇÃO DO JOGADOR
-// ==========================================================================
-function handleVirtualKey(key) {
-  if (STATE.isLocked || STATE.isGameOver) return;
-  audio.playKey();
-  notifyTyping();
+function buildShareText(game) {
+  const number = state.daily?.challengeNumber || game.date || '';
+  const lines = game.guesses.map(guess => guess.result.map(status => (
+    status === 'correct' ? '🟩' : status === 'present' ? '🟨' : '⬜'
+  )).join(''));
+  const score = game.status === 'won' ? `${game.guesses.length}/6` : 'X/6';
+  return `Palavra de Rua ${number} ${score}\n${lines.join('\n')}`;
+}
 
-  if (key === 'ENTER') {
-    submitGuess();
-  } else if (key === 'DEL') {
-    deleteLetter();
+function renderResult() {
+  const game = activeGame();
+  const finished = game && ['won', 'lost'].includes(game.status);
+  elements.resultPanel.hidden = !finished;
+  if (!finished) return;
+
+  const won = game.status === 'won';
+  elements.resultKicker.textContent = state.mode === 'daily' ? 'resultado do desafio' : 'fim da prática';
+  elements.resultTitle.textContent = won ? 'Você encontrou a palavra!' : 'Boa tentativa.';
+  elements.resultCopy.textContent = `A palavra era ${game.answer}. ${won ? `Você resolveu em ${game.guesses.length} tentativa${game.guesses.length === 1 ? '' : 's'}.` : 'Amanhã tem outro desafio.'}`;
+  if (state.mode === 'daily') {
+    elements.shareText.value = buildShareText(game);
+    elements.shareButton.disabled = false;
   } else {
-    addLetter(key);
+    elements.shareText.value = 'A prática não gera resultado compartilhável do desafio diário.';
+    elements.shareButton.disabled = true;
   }
 }
 
-function addLetter(letter) {
-  if (STATE.currentCol < WORD_LENGTH) {
-    const tile = document.getElementById(`tile-${STATE.currentRow}-${STATE.currentCol}`);
-    tile.textContent = letter;
-    tile.classList.add('filled');
-
-    const symbol = document.createElement('span');
-    symbol.className = 'cb-symbol';
-    tile.appendChild(symbol);
-
-    STATE.currentGuess += letter;
-    STATE.currentCol++;
-  }
+function updateModeUI() {
+  const daily = state.mode === 'daily';
+  elements.dailyTab.classList.toggle('is-active', daily);
+  elements.practiceTab.classList.toggle('is-active', !daily);
+  elements.dailyTab.setAttribute('aria-pressed', String(daily));
+  elements.practiceTab.setAttribute('aria-pressed', String(!daily));
+  elements.practiceNote.hidden = daily;
+  elements.practiceForm.hidden = daily;
+  elements.modeLabel.textContent = daily
+    ? `desafio de hoje · ${state.daily?.wordLength || '…'} letras`
+    : 'modo prática · sem ranking';
+  elements.gameKicker.textContent = daily ? 'o desafio de hoje' : 'rodada de prática';
+  elements.gameTitle.textContent = daily ? 'Qual é a palavra?' : 'Pratique no seu ritmo.';
+  elements.modeBadge.textContent = daily ? 'DESAFIO DIÁRIO' : 'PRÁTICA · NÃO CONTA PARA O RANKING';
 }
 
-function deleteLetter() {
-  if (STATE.currentCol > 0) {
-    STATE.currentCol--;
-    const tile = document.getElementById(`tile-${STATE.currentRow}-${STATE.currentCol}`);
-    tile.textContent = '';
-    tile.classList.remove('filled');
-
-    const symbol = document.createElement('span');
-    symbol.className = 'cb-symbol';
-    tile.appendChild(symbol);
-
-    STATE.currentGuess = STATE.currentGuess.slice(0, -1);
-  }
+function applyGameToState(game, mode) {
+  if (mode === 'daily') state.daily = game;
+  else state.practice = game;
+  state.currentGuess = '';
+  state.pendingRequest = null;
 }
 
-function submitGuess() {
-  if (STATE.currentCol < WORD_LENGTH) {
-    showToast('A palavra deve ter 5 letras!');
-    audio.playError();
-    shakeRow(STATE.currentRow);
+function renderGame() {
+  updateModeUI();
+  const game = activeGame();
+  if (!game) {
+    elements.gameDescription.textContent = 'Escolha o tema e o tamanho para começar uma rodada.';
+    renderBoard();
     return;
   }
-
-  // Trava temporariamente até o servidor responder o resultado
-  STATE.isLocked = true;
-
-  socket.emit('submit-guess', {
-    guess: STATE.currentGuess,
-    row: STATE.currentRow
-  });
-}
-
-function shakeRow(rowIdx) {
-  const rowEl = document.querySelector(`.board-row[data-row="${rowIdx}"]`);
-  if (rowEl) {
-    rowEl.style.animation = 'shake 0.35s ease';
-    setTimeout(() => rowEl.style.animation = '', 350);
-  }
-}
-
-// Emitir evento de digitação para animar pulso no oponente
-function notifyTyping() {
-  socket.emit('player-typing', { isTyping: true });
-  clearTimeout(STATE.typingTimeout);
-  STATE.typingTimeout = setTimeout(() => {
-    socket.emit('player-typing', { isTyping: false });
-  }, 1200);
-}
-
-// ==========================================================================
-// EVENTOS DO SOCKET.IO (TEMPO REAL)
-// ==========================================================================
-function setupSocketListeners() {
-  // Sala criada
-  socket.on('room-created', (data) => {
-    STATE.currentRoomCode = data.code;
-    STATE.isHost = true;
-    STATE.isReady = false;
-    DOM.displayRoomCode.textContent = data.code;
-    showScreen(DOM.screenWaiting);
-    updateLobbyDuelists(data.players);
-    showToast(`Sala ${data.code} criada!`);
-  });
-
-  // Entrou em sala existente
-  socket.on('room-joined', (data) => {
-    STATE.currentRoomCode = data.code;
-    STATE.isHost = false;
-    STATE.isReady = false;
-    DOM.displayRoomCode.textContent = data.code;
-    showScreen(DOM.screenWaiting);
-    updateLobbyDuelists(data.players);
-    showToast(`Conectado à sala ${data.code}!`);
-  });
-
-  // Aguardando oponente em partida rápida
-  socket.on('waiting-opponent', (data) => {
-    STATE.currentRoomCode = data.code;
-    STATE.isReady = false;
-    DOM.displayRoomCode.textContent = data.code;
-    showScreen(DOM.screenWaiting);
-    updateLobbyDuelists(data.players);
-  });
-
-  // Jogador entrou
-  socket.on('player-joined', (data) => {
-    updateLobbyDuelists(data.players);
-    const opp = data.players.find(p => p.id !== socket.id);
-    if (opp) {
-      STATE.opponentNickname = opp.nickname;
-      showToast(`${opp.nickname} entrou na arena!`);
-    }
-  });
-
-  // Atualização de status de prontidão dos jogadores
-  socket.on('room-players-updated', (data) => {
-    updateLobbyDuelists(data.players);
-  });
-
-  // Erro ao entrar
-  socket.on('join-error', (data) => {
-    showToast(data.message);
-    audio.playError();
-  });
-
-  // Erro no chute
-  socket.on('guess-error', (data) => {
-    showToast(data.message);
-    audio.playError();
-    STATE.isLocked = false;
-  });
-
-  // Contagem regressiva sincronizada (3, 2, 1)
-  socket.on('countdown-tick', (data) => {
-    console.log('[Client] Countdown tick:', data.count);
-    DOM.gameOverModal.classList.add('hidden');
-    DOM.countdownOverlay.classList.remove('hidden');
-    DOM.countdownNumber.textContent = data.count;
-    audio.playKey();
-  });
-
-  // Início da corrida
-  socket.on('match-start', (data) => {
-    console.log('[Client] Match start recebido:', data);
-    DOM.countdownOverlay.classList.add('hidden');
-    showScreen(DOM.screenArena);
-
-    // Configurar dados da partida
-    DOM.arenaCategoryTag.textContent = `${data.themeIcon} ${data.themeName}`;
-    DOM.playerLocalNick.textContent = STATE.nickname;
-    DOM.playerLocalState.textContent = 'Linha 1/6';
-
-    const opp = data.players.find(p => p.id !== socket.id);
-    if (opp) {
-      DOM.playerOppNick.textContent = opp.nickname;
-      DOM.playerOppState.textContent = 'Linha 1/6';
-    }
-
-    resetArenaState();
-    startTimer();
-    showToast('🏁 LARGADA DADA! DIGITE RÁPIDO!');
-  });
-
-  // Resultado do palpite local
-  socket.on('guess-result', (data) => {
-    applyGuessResult(data);
-  });
-
-  // Progresso do oponente (MÁSCARA SEM SPOILER)
-  socket.on('opponent-progress', (data) => {
-    applyOpponentProgress(data);
-  });
-
-  // Pulso de digitação do oponente
-  socket.on('opponent-typing-status', (data) => {
-    DOM.oppTypingPulse.classList.toggle('active', data.isTyping);
-  });
-
-  // Fim de jogo (Vitória / Derrota / Empate)
-  socket.on('game-over', (data) => {
-    DOM.countdownOverlay.classList.add('hidden');
-    handleGameOver(data);
-  });
-
-  // Jogador saiu da sala
-  socket.on('player-left', (data) => {
-    showToast(data.message || 'Um jogador saiu da sala.');
-    DOM.countdownOverlay.classList.add('hidden');
-    STATE.isReady = false;
-    DOM.readyBtnLabel.textContent = 'ESTOU PRONTO! ⚔️';
-    DOM.btnToggleReady.style.background = 'var(--accent-gradient)';
-    DOM.btnToggleReady.style.color = '#fff';
-  });
-
-  // Desconexão do Socket
-  socket.on('disconnect', (reason) => {
-    console.warn('[Client] Socket desconectado:', reason);
-  });
-
-  // Revanche solicitada
-  socket.on('opponent-wants-rematch', () => {
-    DOM.rematchBtnText.textContent = 'Aceitar Revanche!';
-    showToast('🔥 Oponente quer revanche! Clique para aceitar!');
-    audio.playKey();
-  });
-
-  socket.on('rematch-requested', () => {
-    DOM.rematchBtnText.textContent = 'Aguardando oponente aceitar...';
-    DOM.btnRequestRematch.disabled = true;
-  });
-
-  socket.on('rematch-accepted', () => {
-    DOM.rematchBtnText.textContent = 'Pedir Revanche';
-    DOM.btnRequestRematch.disabled = false;
-    DOM.gameOverModal.classList.add('hidden');
-  });
-
-  socket.on('player-left', (data) => {
-    showToast(data.message);
-  });
-}
-
-// ==========================================================================
-// PROCESSAMENTO DO FLUXO DO JOGO
-// ==========================================================================
-function applyGuessResult(data) {
-  const { row, guess, result, isMatch, currentRow } = data;
-  const guessLetters = guess.split('');
-
-  // Animação de virada 3D em cascata
-  for (let i = 0; i < WORD_LENGTH; i++) {
-    const tile = document.getElementById(`tile-${row}-${i}`);
-    const status = result[i];
-    const letter = guessLetters[i];
-
-    setTimeout(() => {
-      tile.classList.add('flip', status);
-      audio.playFlip(status);
-
-      // Símbolo do modo daltônico
-      const symbolEl = tile.querySelector('.cb-symbol');
-      if (symbolEl) {
-        if (status === 'correct') symbolEl.textContent = '●';
-        else if (status === 'present') symbolEl.textContent = '▲';
-        else symbolEl.textContent = '✕';
-      }
-
-      // Atualizar tecla do teclado
-      updateKeyboardKey(letter, status);
-    }, i * 160);
-  }
-
-  setTimeout(() => {
-    DOM.playerLocalState.textContent = `Linha ${currentRow}/6`;
-
-    if (!isMatch && currentRow < MAX_ROWS && !STATE.isGameOver) {
-      STATE.currentRow++;
-      STATE.currentCol = 0;
-      STATE.currentGuess = '';
-      STATE.isLocked = false;
-    }
-  }, WORD_LENGTH * 160 + 100);
-}
-
-function applyOpponentProgress(data) {
-  const { row, mask, currentRow } = data;
-  for (let i = 0; i < WORD_LENGTH; i++) {
-    const cell = document.getElementById(`opp-cell-${row}-${i}`);
-    if (cell) {
-      cell.className = `mini-cell ${mask[i]}`;
-    }
-  }
-  DOM.playerOppState.textContent = `Linha ${currentRow}/6`;
-}
-
-function updateKeyboardKey(letter, status) {
-  const btn = document.getElementById(`k-btn-${letter}`);
-  if (!btn) return;
-
-  if (status === 'correct') {
-    btn.className = 'k-key correct';
-  } else if (status === 'present' && !btn.classList.contains('correct')) {
-    btn.className = 'k-key present';
-  } else if (status === 'absent' && !btn.classList.contains('correct') && !btn.classList.contains('present')) {
-    btn.className = 'k-key absent';
-  }
-}
-
-function handleGameOver(data) {
-  STATE.isGameOver = true;
-  STATE.isLocked = true;
-  stopTimer();
-
-  const isYouWinner = data.winnerId === socket.id;
-
-  if (isYouWinner) {
-    audio.playVictory();
-    DOM.modalResultIcon.textContent = '🏆';
-    DOM.modalResultTitle.textContent = 'VOCÊ VENCEU O DUELO!';
-    DOM.modalResultTitle.className = 'result-title win';
-    DOM.modalResultDesc.textContent = data.reason === 'forfeit' 
-      ? 'O oponente desconectou. Vitória por W.O.!' 
-      : 'Incrível velocidade! Você decifrou a palavra primeiro!';
-  } else if (data.winnerId === null) {
-    audio.playDefeat();
-    DOM.modalResultIcon.textContent = '🤝';
-    DOM.modalResultTitle.textContent = 'EMPATE!';
-    DOM.modalResultTitle.className = 'result-title';
-    DOM.modalResultDesc.textContent = 'Ambos os duelistas esgotaram as 6 tentativas.';
-  } else {
-    audio.playDefeat();
-    DOM.modalResultIcon.textContent = '💀';
-    DOM.modalResultTitle.textContent = 'DERROTA NA ARENA';
-    DOM.modalResultTitle.className = 'result-title lose';
-    DOM.modalResultDesc.textContent = 'O oponente acertou a palavra secreta antes de você!';
-  }
-
-  DOM.modalSecretWord.textContent = data.secretWord || '-----';
-  DOM.rematchBtnText.textContent = 'Pedir Revanche';
-  DOM.btnRequestRematch.disabled = false;
-  DOM.gameOverModal.classList.remove('hidden');
-}
-
-function resetArenaState() {
-  STATE.currentRow = 0;
-  STATE.currentCol = 0;
-  STATE.currentGuess = '';
-  STATE.isLocked = false;
-  STATE.isGameOver = false;
+  const gameDate = state.daily ? displayDate(state.daily.date) : null;
+  elements.gameDescription.textContent = state.mode === 'daily'
+    ? `${game.wordLength} letras · até ${MAX_ATTEMPTS} tentativas · ${gameDate}`
+    : `${game.wordLength} letras · até ${MAX_ATTEMPTS} tentativas · prática sem ranking`;
+  if (game.status === 'not_started') setStatus('Digite um palpite para começar o desafio.');
+  else if (game.status === 'in_progress') setStatus('Cada palpite revela novas pistas. Você consegue.');
+  else if (game.status === 'won') setStatus('Desafio concluído. Seu resultado foi salvo.', 'success');
+  else if (game.status === 'lost') setStatus('Desafio encerrado. A resposta foi revelada.', 'success');
   renderBoard();
-  renderOpponentGrid();
-  renderKeyboard();
 }
 
-function startTimer() {
-  stopTimer();
-  STATE.timerSeconds = 0;
-  DOM.arenaRoundClock.textContent = '⏱️ 00:00';
-
-  STATE.timerInterval = setInterval(() => {
-    STATE.timerSeconds++;
-    const m = Math.floor(STATE.timerSeconds / 60).toString().padStart(2, '0');
-    const s = (STATE.timerSeconds % 60).toString().padStart(2, '0');
-    DOM.arenaRoundClock.textContent = `⏱️ ${m}:${s}`;
-  }, 1000);
+function editGuess(value) {
+  if (state.submitting || !activeGame() || ['won', 'lost'].includes(activeGame().status)) return;
+  state.pendingRequest = null;
+  if (value === 'delete') state.currentGuess = [...state.currentGuess].slice(0, -1).join('');
+  else if (/^[A-Z]$/.test(value) && state.currentGuess.length < wordLength()) state.currentGuess += value;
+  elements.guessInput.value = state.currentGuess;
+  renderBoard();
 }
 
-function updateLobbyDuelists(players) {
-  if (!players || players.length === 0) return;
+function handleInput() {
+  state.currentGuess = normalize(elements.guessInput.value)
+    .replace(/[^A-Z]/g, '')
+    .slice(0, wordLength());
+  state.pendingRequest = null;
+  elements.guessInput.value = state.currentGuess;
+  renderBoard();
+}
 
-  const p1 = players[0];
-  const p2 = players[1];
-
-  DOM.lobbyNick1.textContent = p1 ? p1.nickname : 'Jogador 1';
-  if (p1 && p1.ready) {
-    DOM.lobbyStatus1.textContent = 'PRONTO ✅';
-    DOM.lobbyStatus1.style.background = 'rgba(0, 229, 153, 0.2)';
-    DOM.lobbyStatus1.style.color = 'var(--cyber-correct)';
-    DOM.cardPlayer1.style.borderColor = 'var(--cyber-correct)';
-  } else {
-    DOM.lobbyStatus1.textContent = 'Aguardando confirmação';
-    DOM.lobbyStatus1.style.background = 'rgba(255, 255, 255, 0.08)';
-    DOM.lobbyStatus1.style.color = 'var(--text-dim)';
-    DOM.cardPlayer1.style.borderColor = 'var(--cyber-border)';
+async function submitGuess() {
+  const submittedMode = state.mode;
+  const game = activeGame();
+  if (!game || state.submitting || ['won', 'lost'].includes(game.status)) return;
+  const guess = normalize(state.currentGuess);
+  if (guess.length !== wordLength()) {
+    setStatus(`Digite uma palavra com exatamente ${wordLength()} letras.`, 'error');
+    elements.guessInput.focus();
+    return;
   }
+  const pending = state.pendingRequest && state.pendingRequest.guess === guess
+    ? state.pendingRequest
+    : { guess, requestId: uuid() };
+  state.pendingRequest = pending;
+  state.submitting = true;
+  renderBoard();
+  setStatus('Conferindo seu palpite…');
 
-  if (p2) {
-    DOM.lobbyNick2.textContent = p2.nickname;
-    if (p2.ready) {
-      DOM.lobbyStatus2.textContent = 'PRONTO ✅';
-      DOM.lobbyStatus2.style.background = 'rgba(0, 229, 153, 0.2)';
-      DOM.lobbyStatus2.style.color = 'var(--cyber-correct)';
-      DOM.cardPlayer2.style.borderColor = 'var(--cyber-correct)';
-    } else {
-      DOM.lobbyStatus2.textContent = 'Aguardando confirmação';
-      DOM.lobbyStatus2.style.background = 'rgba(255, 255, 255, 0.08)';
-      DOM.lobbyStatus2.style.color = 'var(--text-dim)';
-      DOM.cardPlayer2.style.borderColor = 'var(--cyber-border)';
+  try {
+    const endpoint = submittedMode === 'daily'
+      ? `/api/v1/challenge/${encodeURIComponent(game.id)}/guesses`
+      : `/api/v1/practice/${encodeURIComponent(game.id)}/guesses`;
+    const response = await api(endpoint, {
+      method: 'POST',
+      body: JSON.stringify({ guess, requestId: pending.requestId })
+    });
+    const current = submittedMode === 'daily' ? state.daily : state.practice;
+    if (current === game) {
+      if (!game.guesses.some(item => item.requestId === pending.requestId)) game.guesses.push(response.guess);
+      game.status = response.status;
+      if (response.answer) game.answer = response.answer;
+      if (state.mode === submittedMode) {
+        state.currentGuess = '';
+        state.pendingRequest = null;
+        setStatus(response.status === 'won' ? 'Palavra encontrada! Seu resultado foi salvo.'
+          : response.status === 'lost' ? 'As tentativas acabaram. A resposta foi revelada.'
+            : `Palpite registrado. Restam ${response.attemptsRemaining} tentativas.`,
+        response.status === 'in_progress' ? '' : 'success');
+        renderBoard();
+      }
     }
-
-    DOM.btnToggleReady.style.display = 'flex';
-    DOM.btnCopyInviteLink.style.display = 'none';
-    DOM.lobbyHelperText.textContent = 'Ambos na sala! Clique em ESTOU PRONTO para iniciar o duelo!';
-  } else {
-    DOM.lobbyNick2.textContent = 'Esperando oponente...';
-    DOM.lobbyStatus2.textContent = 'Aguardando entrar';
-    DOM.lobbyStatus2.style.background = 'rgba(255, 255, 255, 0.08)';
-    DOM.lobbyStatus2.style.color = 'var(--text-dim)';
-    DOM.cardPlayer2.style.borderColor = 'var(--cyber-border)';
-    DOM.btnToggleReady.style.display = 'none';
-    DOM.btnCopyInviteLink.style.display = 'flex';
-    DOM.lobbyHelperText.textContent = 'Aguardando oponente entrar na arena...';
+    if (submittedMode === 'daily') await refreshPanels();
+  } catch (error) {
+    if (error.status) state.pendingRequest = null;
+    setStatus(error.message || 'Não foi possível enviar o palpite.', 'error');
+  } finally {
+    state.submitting = false;
+    renderBoard();
   }
 }
 
-// ==========================================================================
-// REGISTRO DE SERVICE WORKER (PWA)
-// ==========================================================================
-function setupPWA() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').then(() => {
-      console.log('[PWA] Service Worker registrado com sucesso!');
-    }).catch(err => {
-      console.warn('[PWA] Erro ao registrar SW:', err);
-    });
+async function loadDaily() {
+  const game = await api('/api/v1/challenge/today');
+  applyGameToState(game, 'daily');
+  elements.date.textContent = `· ${displayDate(game.date)}`;
+  elements.challengeNumber.textContent = `DESAFIO N.º ${String(game.challengeNumber).padStart(3, '0')}`;
+  elements.rankingDate.textContent = displayDate(game.date);
+}
+
+async function loadPractice(id) {
+  const game = await api(`/api/v1/practice/${encodeURIComponent(id)}`);
+  applyGameToState(game, 'practice');
+}
+
+async function startPractice(event) {
+  event.preventDefault();
+  const category = categoryById(elements.categorySelect.value);
+  const wordLengthValue = Number(elements.lengthSelect.value);
+  if (!category || !category.lengths.includes(wordLengthValue)) {
+    setStatus('Escolha uma combinação de tema e tamanho disponível.', 'error');
+    return;
   }
-
-  let deferredPrompt;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    DOM.btnInstallPwa.style.display = 'flex';
-
-    DOM.btnInstallPwa.addEventListener('click', () => {
-      DOM.btnInstallPwa.style.display = 'none';
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => {
-        deferredPrompt = null;
-      });
+  try {
+    const game = await api('/api/v1/practice', {
+      method: 'POST',
+      body: JSON.stringify({ categoryId: category.id, wordLength: wordLengthValue })
     });
+    applyGameToState(game, 'practice');
+    setPracticeId(game.id);
+    state.mode = 'practice';
+    setStatus('Nova prática iniciada. Boa sorte!');
+    renderGame();
+    elements.guessInput.focus();
+  } catch (error) {
+    setStatus(error.message, 'error');
+  }
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  state.currentGuess = '';
+  state.pendingRequest = null;
+  renderGame();
+  if (mode === 'practice' && !state.practice) elements.categorySelect.focus();
+  else if (activeGame() && !['won', 'lost'].includes(activeGame().status)) elements.guessInput.focus();
+}
+
+function renderStats(stats) {
+  elements.played.textContent = String(stats.played);
+  elements.winRate.textContent = `${stats.winRate}%`;
+  elements.streak.textContent = String(stats.currentStreak);
+  elements.bestStreak.textContent = String(stats.bestStreak);
+  elements.distribution.replaceChildren();
+  const maximum = Math.max(1, ...stats.distribution);
+  stats.distribution.forEach((count, index) => {
+    const row = document.createElement('div');
+    row.className = 'dist-row';
+    const label = document.createElement('span');
+    label.textContent = String(index + 1);
+    const track = document.createElement('div');
+    track.className = 'dist-track';
+    track.setAttribute('role', 'img');
+    track.setAttribute('aria-label', `${index + 1} tentativa${index ? 's' : ''}: ${count} vitórias`);
+    const fill = document.createElement('div');
+    fill.className = 'dist-fill';
+    fill.style.width = `${count ? Math.max(10, (count / maximum) * 100) : 0}%`;
+    fill.textContent = String(count);
+    track.append(fill);
+    const countLabel = document.createElement('span');
+    countLabel.textContent = String(count).padStart(2, '0');
+    row.append(label, track, countLabel);
+    elements.distribution.append(row);
   });
 }
 
-// Inicializar aplicação
-document.addEventListener('DOMContentLoaded', init);
+function renderRanking(result) {
+  elements.rankingList.replaceChildren();
+  if (!result.entries.length) {
+    const empty = document.createElement('li');
+    empty.className = 'empty-state';
+    empty.textContent = 'Ainda não há resultados públicos para este desafio.';
+    elements.rankingList.append(empty);
+    return;
+  }
+  for (const entry of result.entries) {
+    const row = document.createElement('li');
+    row.className = 'rank-row';
+    const rank = document.createElement('span');
+    rank.className = 'rank-position';
+    rank.textContent = String(entry.rank).padStart(2, '0');
+    const nickname = document.createElement('span');
+    nickname.className = 'rank-name';
+    nickname.textContent = entry.nickname;
+    const score = document.createElement('span');
+    score.className = 'rank-score';
+    score.textContent = `${entry.attempts}/6`;
+    row.append(rank, nickname, score);
+    elements.rankingList.append(row);
+  }
+}
+
+async function refreshPanels() {
+  const results = await Promise.allSettled([
+    api('/api/v1/stats/me'),
+    api(`/api/v1/leaderboard?date=${encodeURIComponent(state.daily.date)}&limit=20`)
+  ]);
+  if (results[0].status === 'fulfilled') renderStats(results[0].value);
+  else {
+    console.error('[UI] Não foi possível carregar estatísticas:', results[0].reason);
+    showToast('Não foi possível atualizar as estatísticas.');
+  }
+  if (results[1].status === 'fulfilled') renderRanking(results[1].value);
+  else {
+    console.error('[UI] Não foi possível carregar ranking:', results[1].reason);
+    elements.rankingList.replaceChildren();
+    const error = document.createElement('li');
+    error.className = 'empty-state';
+    error.textContent = 'Ranking indisponível no momento.';
+    elements.rankingList.append(error);
+  }
+}
+
+async function saveProfile(event) {
+  event.preventDefault();
+  const nickname = elements.nickname.value.trim();
+  try {
+    const result = await api('/api/v1/profile', {
+      method: 'PATCH',
+      body: JSON.stringify({ nickname: nickname || null })
+    });
+    state.profile = result.profile;
+    elements.nickname.value = result.profile.nickname || '';
+    showToast(result.profile.nickname ? 'Apelido salvo. Ele aparece no ranking.' : 'Apelido removido.');
+    await refreshPanels();
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function deleteProfile() {
+  if (!window.confirm('Apagar o apelido e o histórico deste dispositivo? Essa ação não pode ser desfeita.')) return;
+  try {
+    await api('/api/v1/profile', { method: 'DELETE' });
+    showToast('Perfil e histórico apagados.');
+    window.location.reload();
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function shareResult() {
+  const text = elements.shareText.value;
+  if (!text || !state.daily || !['won', 'lost'].includes(state.daily.status)) return;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'Meu resultado — Palavra de Rua', text });
+      showToast('Resultado compartilhado.');
+      return;
+    }
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      showToast('Resultado copiado sem spoilers.');
+      return;
+    }
+    elements.shareText.focus();
+    elements.shareText.select();
+    showToast('Texto selecionado. Copie para compartilhar.');
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+    console.error('[UI] Compartilhamento indisponível:', error);
+    elements.shareText.focus();
+    elements.shareText.select();
+    showToast('Não foi possível compartilhar automaticamente. Copie o texto selecionado.');
+  }
+}
+
+function editPreferences(key, bodyClass, button) {
+  const preferences = readPreferences();
+  preferences[key] = !preferences[key];
+  document.body.classList.toggle(bodyClass, preferences[key]);
+  button.setAttribute('aria-pressed', String(preferences[key]));
+  savePreferences(preferences);
+}
+
+function registerInstallPrompt() {
+  window.addEventListener('beforeinstallprompt', event => {
+    event.preventDefault();
+    state.installPrompt = event;
+    elements.installButton.hidden = false;
+    elements.installCardButton.hidden = false;
+  });
+  window.addEventListener('appinstalled', () => {
+    state.installPrompt = null;
+    elements.installButton.hidden = true;
+    elements.installCardButton.hidden = true;
+    showToast('Jogo instalado neste dispositivo.');
+  });
+}
+
+async function installApp() {
+  if (!state.installPrompt) {
+    showToast('A instalação não está disponível neste navegador.');
+    return;
+  }
+  state.installPrompt.prompt();
+  await state.installPrompt.userChoice;
+  state.installPrompt = null;
+  elements.installButton.hidden = true;
+  elements.installCardButton.hidden = true;
+}
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('/sw.js').catch(error => {
+    console.error('[PWA] Não foi possível registrar o Service Worker:', error);
+  });
+}
+
+function attachEvents() {
+  elements.dailyTab.addEventListener('click', () => setMode('daily'));
+  elements.practiceTab.addEventListener('click', () => setMode('practice'));
+  elements.practiceForm.addEventListener('submit', startPractice);
+  elements.categorySelect.addEventListener('change', () => updateLengthsForCategory(Number(elements.lengthSelect.value)));
+  elements.guessInput.addEventListener('input', handleInput);
+  elements.guessInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      submitGuess();
+    } else if (event.key === 'Escape') {
+      state.currentGuess = '';
+      state.pendingRequest = null;
+      elements.guessInput.value = '';
+      renderBoard();
+    }
+  });
+  elements.submitGuess.addEventListener('click', submitGuess);
+  elements.clearGuess.addEventListener('click', () => {
+    state.currentGuess = '';
+    state.pendingRequest = null;
+    elements.guessInput.value = '';
+    elements.guessInput.focus();
+    renderBoard();
+  });
+  elements.shareButton.addEventListener('click', shareResult);
+  elements.profileForm.addEventListener('submit', saveProfile);
+  elements.deleteProfile.addEventListener('click', deleteProfile);
+  elements.contrastToggle.addEventListener('click', () => editPreferences('highContrast', 'high-contrast', elements.contrastToggle));
+  elements.textToggle.addEventListener('click', () => editPreferences('largeText', 'large-text', elements.textToggle));
+  elements.motionToggle.addEventListener('click', () => editPreferences('reducedMotion', 'reduced-motion', elements.motionToggle));
+  elements.installButton.addEventListener('click', installApp);
+  elements.installCardButton.addEventListener('click', installApp);
+  elements.retryButton.addEventListener('click', () => window.location.reload());
+  window.addEventListener('online', () => showToast('Conexão restabelecida. Você pode tentar novamente.'));
+  window.addEventListener('offline', () => showToast('Você está offline. O desafio precisa de conexão para ser confirmado.'));
+}
+
+async function initialize() {
+  applyPreferences();
+  attachEvents();
+  registerInstallPrompt();
+  registerServiceWorker();
+  try {
+    const profile = await api('/api/v1/profile');
+    state.profile = profile.profile;
+    elements.nickname.value = state.profile.nickname || '';
+    const [categories] = await Promise.all([
+      api('/api/v1/categories'),
+      loadDaily()
+    ]);
+    state.categories = categories;
+    renderCategories();
+    const practiceId = getPracticeId();
+    if (practiceId) {
+      try {
+        await loadPractice(practiceId);
+      } catch (error) {
+        if (error.status !== 404) throw error;
+        setPracticeId(null);
+      }
+    }
+    state.mode = 'daily';
+    renderGame();
+    await refreshPanels();
+    elements.retryButton.hidden = true;
+  } catch (error) {
+    console.error('[UI] Falha ao iniciar o jogo:', error);
+    setStatus(error.message || 'Não foi possível carregar o jogo. Tente novamente.', 'error');
+    elements.gameDescription.textContent = 'Não foi possível carregar o desafio diário.';
+    elements.retryButton.hidden = false;
+    elements.attemptsLeft.textContent = '—';
+    elements.submitGuess.disabled = true;
+    elements.guessInput.disabled = true;
+  }
+}
+
+initialize();
